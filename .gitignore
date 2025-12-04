@@ -34,3 +34,12 @@ out/
 # OS & vari
 .DS_Store
 Thumbs.db
+
+# .vpp vari
+.vpprefdata/
+.vpp~
+*.vpp.working
+*.vpp.working-journal
+*.lock
+.vpp.
+tmp/*
