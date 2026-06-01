@@ -1,17 +1,48 @@
-# Compiled class file
+# Java/Gradle
+
+# Compiled class files
 *.class
 
-# Log file
+# Build folders
+.gradle/
+**/build/
+build/
+
+# Gradle wrapper scripts (track these)
+gradlew
+gradlew.bat
+# Ensure the wrapper JAR is tracked even if other JARs are ignored
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs
 *.log
 
-# BlueJ files
-*.ctxt
+# Temporary files
+*.tmp
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# OS files
+.DS_Store
+Thumbs.db
 
-# Package Files #
-*.jar
+# IDEs
+/.idea/
+/*.iml
+*.ipr
+*.iws
+/.vscode/
+/.settings/
+/.project
+
+# Eclipse
+.settings/
+
+# IntelliJ
+out/
+
+# Tools and local artifacts
+/tools/
+
+# Package files - don't track general archives (keep wrapper jar tracked above)
 *.war
 *.nar
 *.ear
@@ -19,6 +50,9 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Maven
+target/
+
+# VM crash logs
 hs_err_pid*
 replay_pid*
