@@ -1,0 +1,10 @@
+# Ignore build artifacts for the app module
+/build/
+/out/
+
+# Gradle and temporary files
+/.gradle/
+*.log
+
+# IntelliJ
+out/
