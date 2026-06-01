@@ -1,0 +1,8 @@
+# Visual Paradigm - project/workspace files
+.vpprefdata/
+*.vpp~*
+*.vpp.working
+*.vpp.working-journal
+*.lock
+*.vpp.*
+tmp/*
