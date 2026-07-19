@@ -8,11 +8,13 @@
 **/build/
 build/
 
-# Gradle wrapper scripts (track these)
-gradlew
-gradlew.bat
-# Ensure the wrapper JAR is tracked even if other JARs are ignored
-!gradle/wrapper/gradle-wrapper.jar
+# NOTE: the Gradle wrapper (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
+# must be committed so the project builds without a local Gradle install.
+
+# H2 file database (runtime artifacts, must never be committed)
+*.mv.db
+*.trace.db
+*.lock.db
 
 # Logs
 *.log
