@@ -30,3 +30,10 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
+
+// Run the app from the repository root so the relative H2 path
+// (jdbc:h2:file:./data/hackhub-db) always resolves to the root-level data/ folder,
+// regardless of the module that owns the bootRun task.
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    workingDir = rootProject.projectDir
+}
