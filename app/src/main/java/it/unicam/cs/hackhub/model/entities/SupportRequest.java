@@ -30,7 +30,8 @@ public class SupportRequest {
     @JsonIgnore
     private Call call;
 
-    public SupportRequest(String description, SupportRequestState status) {
+    public SupportRequest(Registration registration, String description, SupportRequestState status) {
+        this.registration = registration;
         this.description = description;
         this.status = status;
     }

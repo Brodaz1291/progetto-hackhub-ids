@@ -30,7 +30,8 @@ public class Payment {
     @JsonIgnore
     private Registration registration;
 
-    public Payment(BigDecimal amount, LocalDateTime date, String externalId) {
+    public Payment(Registration registration, BigDecimal amount, LocalDateTime date, String externalId) {
+        this.registration = registration;
         this.amount = amount;
         this.date = date;
         this.externalId = externalId;

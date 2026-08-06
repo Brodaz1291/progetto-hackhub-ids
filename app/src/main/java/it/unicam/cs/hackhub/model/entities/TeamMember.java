@@ -22,5 +22,6 @@ public class TeamMember extends Participation {
     private Team team;
 
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Invitation> sentInvitations = new ArrayList<>();
 }

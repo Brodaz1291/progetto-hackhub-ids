@@ -31,7 +31,9 @@ public class Call {
     @JoinColumn(name = "support_request_id")
     private SupportRequest supportRequest;
 
-    public Call(LocalDateTime dateTime, String externalId) {
+    public Call(SupportRequest supportRequest, Mentor mentor, LocalDateTime dateTime, String externalId) {
+        this.supportRequest = supportRequest;
+        this.mentor = mentor;
         this.dateTime = dateTime;
         this.externalId = externalId;
     }

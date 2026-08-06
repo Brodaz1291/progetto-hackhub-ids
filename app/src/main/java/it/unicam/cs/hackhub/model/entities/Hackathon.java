@@ -54,7 +54,7 @@ public class Hackathon {
 
     public Hackathon(String name, String rules, String location, BigDecimal prize,
                      LocalDateTime registrationDeadline, LocalDateTime startDate,
-                     LocalDateTime endDate, int maxTeamSize, HackathonState state) {
+                     LocalDateTime endDate, int maxTeamSize) {
         this.name = name;
         this.rules = rules;
         this.location = location;
@@ -63,6 +63,5 @@ public class Hackathon {
         this.startDate = startDate;
         this.endDate = endDate;
         this.maxTeamSize = maxTeamSize;
-        this.state = state;
     }
 }

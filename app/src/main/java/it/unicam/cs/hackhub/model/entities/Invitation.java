@@ -33,7 +33,10 @@ public class Invitation {
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
-    public Invitation(InvitationState status) {
+    public Invitation(TeamMember sender, Team team, User recipient, InvitationState status) {
+        this.sender = sender;
+        this.team = team;
+        this.recipient = recipient;
         this.status = status;
     }
 }

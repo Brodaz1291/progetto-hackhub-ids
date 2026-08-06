@@ -35,7 +35,8 @@ public class Submission {
     @JoinColumn(name = "evaluation_id")
     private Evaluation evaluation;
 
-    public Submission(String title, String description, String link, LocalDateTime submissionDate) {
+    public Submission(Registration registration, String title, String description, String link, LocalDateTime submissionDate) {
+        this.registration = registration;
         this.title = title;
         this.description = description;
         this.link = link;

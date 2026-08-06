@@ -25,7 +25,8 @@ public class Report {
     @JoinColumn(name = "registration_id")
     private Registration registration;
 
-    public Report(String reason, LocalDateTime date) {
+    public Report(Registration registration, String reason, LocalDateTime date) {
+        this.registration = registration;
         this.reason = reason;
         this.date = date;
     }
