@@ -22,6 +22,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     @Query("""
             SELECT s FROM Submission s
             WHERE s.registration.hackathon.id = :hackathonId
+              AND s.registration.state <> it.unicam.cs.hackhub.model.enums.RegistrationState.DISQUALIFIED
               AND s.evaluation IS NOT NULL
             """)
     List<Submission> findEvaluatedByHackathonId(@Param("hackathonId") Long hackathonId);
