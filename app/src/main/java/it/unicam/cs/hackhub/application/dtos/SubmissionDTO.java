@@ -25,7 +25,7 @@ public class SubmissionDTO {
 
     private String teamName;
 
-    private int score;
+    private Integer score;
 
     private String judgment;
 }
