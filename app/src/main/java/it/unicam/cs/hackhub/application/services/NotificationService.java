@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Gli avvisi sono effimeri: non esiste un'entità Notification e nulla viene persistito.
- * Qui l'invio è simulato da un log; è il punto in cui un sistema reale spedirebbe
- * email o notifiche push.
+ * Notifications are ephemeral: there is no Notification entity and nothing is persisted.
+ * Here the delivery is simulated with a log; this is the point where a real system would
+ * send emails or push notifications.
  */
 @Service
 public class NotificationService {
@@ -23,7 +23,7 @@ public class NotificationService {
         String mentorUsernames = mentors.stream()
                 .map(mentor -> mentor.getUser().getUsername())
                 .collect(Collectors.joining(", "));
-        log.info("Assegnazione allo staff notificata: giudice {}, mentori [{}]",
+        log.info("NotificationService: notified judge {} and mentors [{}] of their assignment",
                 judge.getUser().getUsername(), mentorUsernames);
     }
 }

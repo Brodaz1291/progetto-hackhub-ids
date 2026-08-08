@@ -10,11 +10,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Costruisce i soli otto attributi propri di Hackathon: staff, stato e id restano
- * responsabilità del service.
+ * Builds only the eight attributes Hackathon owns: staff, state and id remain the
+ * service's responsibility.
  * <p>
- * Lo scope è prototype perché il builder accumula stato tra una setter e l'altra: come
- * singleton, due richieste concorrenti si sovrascriverebbero i campi a metà costruzione.
+ * The scope is prototype because the builder accumulates state between one setter and the
+ * next: as a singleton, two concurrent requests would overwrite each other's fields
+ * halfway through the construction.
  */
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
