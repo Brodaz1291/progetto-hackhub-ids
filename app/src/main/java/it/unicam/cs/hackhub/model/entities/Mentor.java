@@ -17,4 +17,8 @@ public class Mentor extends StaffParticipation {
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Call> calls = new ArrayList<>();
+
+    public Mentor(User user, Hackathon hackathon) {
+        super(user, hackathon);
+    }
 }

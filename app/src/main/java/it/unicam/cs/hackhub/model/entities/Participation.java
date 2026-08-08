@@ -20,4 +20,8 @@ public abstract class Participation {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    protected Participation(User user) {
+        this.user = user;
+    }
 }

@@ -16,4 +16,9 @@ public abstract class StaffParticipation extends Participation {
     @JoinColumn(name = "hackathon_id")
     @JsonIgnore
     private Hackathon hackathon;
+
+    protected StaffParticipation(User user, Hackathon hackathon) {
+        super(user);
+        this.hackathon = hackathon;
+    }
 }
