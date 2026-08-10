@@ -1,0 +1,580 @@
+{
+	"info": {
+		"name": "HackHub",
+		"description": "Happy paths of the HackHub REST API. Run the folders in order, from 00 Setup down: every request that creates something saves the generated id in a collection variable, so no id has to be typed by hand.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "00 Setup",
+			"description": "Logs in the development users seeded at startup and stores their ids. These are the actors of every following request.",
+			"item": [
+				{
+					"name": "Login organizer1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"organizerId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=organizer1&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "organizer1"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						},
+						"description": "Credentials travel in the query string: the endpoint reads them with @RequestParam."
+					}
+				},
+				{
+					"name": "Login judge1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"judgeId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=judge1&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "judge1"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Login mentor1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"mentorId1\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=mentor1&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "mentor1"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Login mentor2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"mentorId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=mentor2&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "mentor2"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Login member1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"memberId1\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=member1&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member1"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Login member2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"memberId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=member2&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member2"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "01 Auth",
+			"description": "Registration of a brand new user, followed by its login and logout.",
+			"item": [
+				{
+					"name": "Register newcomer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"newUserId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newcomer\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Unlike login and logout, register reads its parameters from the JSON body."
+					}
+				},
+				{
+					"name": "Login newcomer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=newcomer&password=password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "newcomer"
+								},
+								{
+									"key": "password",
+									"value": "password"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Logout newcomer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout?userId={{newUserId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{newUserId}}"
+								}
+							]
+						},
+						"description": "Uses the id returned by the registration, never a hardcoded one."
+					}
+				}
+			]
+		},
+		{
+			"name": "02 Hackathon",
+			"description": "Creation of a hackathon by organizer1 and update of its information while registrations are still open.",
+			"item": [
+				{
+					"name": "Create hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"hackathonId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"HackHub Autumn Challenge\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed.\",\n    \"location\": \"Camerino, Polo Informatico\",\n    \"prize\": 5000,\n    \"registrationDeadline\": \"2026-09-01T23:59:00\",\n    \"startDate\": \"2026-09-15T09:00:00\",\n    \"endDate\": \"2026-09-17T18:00:00\",\n    \"maxTeamSize\": 4,\n    \"judgeId\": {{judgeId}},\n    \"mentorIds\": [{{mentorId1}}, {{mentorId2}}]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons?organizerId={{organizerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons"
+							],
+							"query": [
+								{
+									"key": "organizerId",
+									"value": "{{organizerId}}"
+								}
+							]
+						},
+						"description": "The staff is taken from the ids saved in 00 Setup. The dates respect registrationDeadline <= startDate < endDate, otherwise the creation is rejected."
+					}
+				},
+				{
+					"name": "Update hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"HackHub Autumn Challenge 2026\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed, and the repository must be public.\",\n    \"location\": \"Camerino, Aula Magna\",\n    \"prize\": 6000,\n    \"registrationDeadline\": \"2026-09-05T23:59:00\",\n    \"startDate\": \"2026-09-20T09:00:00\",\n    \"endDate\": \"2026-09-22T18:00:00\",\n    \"maxTeamSize\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							]
+						},
+						"description": "The staff is not editable here: the body carries only the information proper to the hackathon."
+					}
+				}
+			]
+		},
+		{
+			"name": "03 Team",
+			"description": "Creation of a team by member1, who becomes its first member.",
+			"item": [
+				{
+					"name": "Create team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.collectionVariables.set(\"teamId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Byte Runners\",\n    \"iban\": \"IT60X0542811101000000123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teams?creatorId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams"
+							],
+							"query": [
+								{
+									"key": "creatorId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "The creator must not take part in anything else yet: member1 is free, while organizer1, judge1 and the mentors are already staff of the hackathon."
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "organizerId",
+			"value": ""
+		},
+		{
+			"key": "judgeId",
+			"value": ""
+		},
+		{
+			"key": "mentorId1",
+			"value": ""
+		},
+		{
+			"key": "mentorId2",
+			"value": ""
+		},
+		{
+			"key": "memberId1",
+			"value": ""
+		},
+		{
+			"key": "memberId2",
+			"value": ""
+		},
+		{
+			"key": "newUserId",
+			"value": ""
+		},
+		{
+			"key": "hackathonId",
+			"value": ""
+		},
+		{
+			"key": "teamId",
+			"value": ""
+		}
+	]
+}
