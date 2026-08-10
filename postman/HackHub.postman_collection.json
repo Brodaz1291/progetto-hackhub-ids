@@ -265,6 +265,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the response does not expose the password\", () => pm.expect(pm.response.json()).to.not.have.property(\"password\"));",
 									"pm.collectionVariables.set(\"newUserId\", pm.response.json().id);"
 								]
 							}
@@ -309,7 +310,8 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the response does not expose the password\", () => pm.expect(pm.response.json()).to.not.have.property(\"password\"));"
 								]
 							}
 						}
@@ -391,6 +393,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon is open to registrations\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTRATION\"));",
 									"pm.collectionVariables.set(\"hackathonId\", pm.response.json().id);"
 								]
 							}
@@ -440,7 +443,8 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the new name is in the response\", () => pm.expect(pm.response.json().name).to.eql(\"HackHub Autumn Challenge 2026\"));"
 								]
 							}
 						}
@@ -491,6 +495,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member1\"));",
 									"pm.collectionVariables.set(\"teamId\", pm.response.json().id);"
 								]
 							}

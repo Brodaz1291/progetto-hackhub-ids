@@ -42,6 +42,9 @@ No id is written by hand: every request that creates something saves the returne
 collection variable through a script in its **Tests** tab, and the following requests refer to
 it as `{{hackathonId}}`, `{{teamId}}`, and so on.
 
+One variable is filled but not used yet: `memberId2`. It is there for the invitations to a
+team, which are not implemented yet.
+
 ## Why the data is what it is
 
 **The team is created by `member1`, not by one of the staff users.** A user takes part in one
