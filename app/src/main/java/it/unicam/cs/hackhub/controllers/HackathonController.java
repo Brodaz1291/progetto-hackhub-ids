@@ -4,8 +4,11 @@ import it.unicam.cs.hackhub.application.dtos.HackathonDTO;
 import it.unicam.cs.hackhub.application.mappers.DTOMapper;
 import it.unicam.cs.hackhub.application.services.HackathonService;
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
+import it.unicam.cs.hackhub.controllers.requests.UpdateHackathonRequest;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,5 +37,15 @@ public class HackathonController {
                                         @RequestParam Long organizerId) {
         Hackathon createdHackathon = hackathonService.createHackathon(req, organizerId);
         return dtoMapper.toDTO(createdHackathon);
+    }
+
+    /**
+     * Replaces the information of a hackathon still open to registrations.
+     */
+    @PutMapping("/{hackathonId}")
+    public HackathonDTO updateHackathon(@PathVariable Long hackathonId,
+                                        @RequestBody UpdateHackathonRequest req) {
+        Hackathon updatedHackathon = hackathonService.updateHackathon(hackathonId, req);
+        return dtoMapper.toDTO(updatedHackathon);
     }
 }
