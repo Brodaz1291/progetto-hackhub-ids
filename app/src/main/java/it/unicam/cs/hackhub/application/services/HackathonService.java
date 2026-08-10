@@ -1,6 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
+import it.unicam.cs.hackhub.controllers.requests.UpdateHackathonRequest;
 import it.unicam.cs.hackhub.designPatterns.HackathonBuilder;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
@@ -90,5 +91,53 @@ public class HackathonService {
             return false;
         }
         return req.getJudgeId() != null && req.getMentorIds() != null && !req.getMentorIds().isEmpty();
+    }
+
+    /**
+     * Updates the information of a hackathon still open to registrations.
+     */
+    public Hackathon updateHackathon(Long hackathonId, UpdateHackathonRequest req) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        // the phase is checked before the data: once registrations are closed the
+        // information is settled with the enrolled teams, so validating it is pointless
+        if (!checkHackathonInRegistration(hackathon)) {
+            throw new IllegalArgumentException("A hackathon can be updated only during its registration phase");
+        }
+        if (!checkUpdateInformation(req)) {
+            throw new IllegalArgumentException("Invalid hackathon update information");
+        }
+        applyChanges(hackathon, req);
+        return hackathonRepository.save(hackathon);
+    }
+
+    private boolean checkHackathonInRegistration(Hackathon hackathon) {
+        return hackathon.getState() == HackathonState.REGISTRATION;
+    }
+
+    private boolean checkUpdateInformation(UpdateHackathonRequest req) {
+        if (!StringUtils.hasText(req.getName()) || !StringUtils.hasText(req.getRules())
+                || !StringUtils.hasText(req.getLocation())) {
+            return false;
+        }
+        if (req.getRegistrationDeadline() == null || req.getStartDate() == null || req.getEndDate() == null) {
+            return false;
+        }
+        if (req.getRegistrationDeadline().isAfter(req.getStartDate())
+                || !req.getStartDate().isBefore(req.getEndDate())) {
+            return false;
+        }
+        return req.getPrize() != null && req.getPrize().signum() >= 0 && req.getMaxTeamSize() > 0;
+    }
+
+    private void applyChanges(Hackathon hackathon, UpdateHackathonRequest req) {
+        hackathon.setName(req.getName());
+        hackathon.setRules(req.getRules());
+        hackathon.setLocation(req.getLocation());
+        hackathon.setPrize(req.getPrize());
+        hackathon.setRegistrationDeadline(req.getRegistrationDeadline());
+        hackathon.setStartDate(req.getStartDate());
+        hackathon.setEndDate(req.getEndDate());
+        hackathon.setMaxTeamSize(req.getMaxTeamSize());
     }
 }
