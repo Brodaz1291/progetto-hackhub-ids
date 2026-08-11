@@ -657,6 +657,133 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "05 Invitations",
+			"description": "member1 invites member2 into the team created in 03, and member2 accepts. The three requests go through TeamFacade, which coordinates the state of the invitation with the membership.",
+			"item": [
+				{
+					"name": "Send invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
+									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+									"pm.collectionVariables.set(\"invitationId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/{{teamId}}/invitations?username=member2&senderId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"{{teamId}}",
+								"invitations"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member2"
+								},
+								{
+									"key": "senderId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "member1 is the only member of the team, so it is the only user who can invite; member2 is free, as neither 03 nor 04 has used it."
+					}
+				},
+				{
+					"name": "Get invitations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"member2 has at least one invitation\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
+									"pm.test(\"the invitation comes from the right team\", () => pm.expect(pm.response.json()[0].teamName).to.eql(\"Byte Runners\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/invitations?userId={{memberId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"invitations"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{memberId2}}"
+								}
+							]
+						},
+						"description": "The list holds the invitations received by member2 and still to be answered, not those sent by a team: this is why the path carries no team id."
+					}
+				},
+				{
+					"name": "Accept invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the invitation is accepted\", () => pm.expect(pm.response.json().status).to.eql(\"ACCEPTED\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/invitations/{{invitationId}}?userId={{memberId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"invitations",
+								"{{invitationId}}"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{memberId2}}"
+								}
+							]
+						},
+						"description": "An invitation is answered by its recipient only, so the user asking for the acceptance is the same one the invitation is addressed to. Beyond the state of the invitation, the request creates the membership of member2 in the team."
+					}
+				}
+			]
 		}
 	],
 	"variable": [
@@ -698,6 +825,10 @@
 		},
 		{
 			"key": "teamId",
+			"value": ""
+		},
+		{
+			"key": "invitationId",
 			"value": ""
 		}
 	]
