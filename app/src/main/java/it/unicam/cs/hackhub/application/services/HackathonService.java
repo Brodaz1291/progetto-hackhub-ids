@@ -7,7 +7,6 @@ import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import it.unicam.cs.hackhub.model.entities.Organizer;
-import it.unicam.cs.hackhub.model.entities.Participation;
 import it.unicam.cs.hackhub.model.entities.User;
 import it.unicam.cs.hackhub.model.enums.HackathonState;
 import it.unicam.cs.hackhub.model.repositories.HackathonRepository;
@@ -175,15 +174,20 @@ public class HackathonService {
      * with the participation.
      */
     @Transactional
-    public void removeMentor(Long hackathonId, Long mentorId) {
+    public void removeMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
-        Participation participation = participationRepository.findById(mentorId)
-                .orElseThrow(() -> new IllegalArgumentException("Participation not found: " + mentorId));
-        if (!(participation instanceof Mentor mentor) || !mentor.getHackathon().getId().equals(hackathonId)) {
-            throw new IllegalArgumentException(
-                    "Participation " + mentorId + " is not a mentor of hackathon " + hackathonId);
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        // looking the mentor up inside the staff of this hackathon makes both the type and
+        // the membership checks implicit
+        Mentor mentor = hackathon.getStaff().stream()
+                .filter(Mentor.class::isInstance)
+                .map(Mentor.class::cast)
+                .filter(staffMentor -> staffMentor.getUser().getId().equals(user.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        username + " is not a mentor of hackathon " + hackathonId));
         if (!checkNotLastMentor(hackathon)) {
             throw new IllegalArgumentException("The last mentor cannot be removed, only replaced");
         }
@@ -192,7 +196,7 @@ public class HackathonService {
         notificationService.notifyMentor(mentor);
         // removing the participation from the list is what deletes it: orphanRemoval takes
         // care of the row and, in cascade, of the calls the mentor had planned
-        hackathon.getStaff().removeIf(staff -> staff.getId().equals(mentorId));
+        hackathon.getStaff().removeIf(staff -> staff.getId().equals(mentor.getId()));
         hackathonRepository.save(hackathon);
     }
 

@@ -68,9 +68,9 @@ public class HackathonController {
     /**
      * Removes a mentor from a hackathon.
      */
-    @DeleteMapping("/{hackathonId}/mentors/{mentorId}")
-    public void removeMentor(@PathVariable Long hackathonId, @PathVariable Long mentorId) {
-        hackathonService.removeMentor(hackathonId, mentorId);
+    @DeleteMapping("/{hackathonId}/mentors")
+    public void removeMentor(@PathVariable Long hackathonId, @RequestParam String username) {
+        hackathonService.removeMentor(hackathonId, username);
     }
 
     /**
