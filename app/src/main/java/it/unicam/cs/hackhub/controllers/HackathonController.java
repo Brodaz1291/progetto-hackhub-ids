@@ -1,11 +1,15 @@
 package it.unicam.cs.hackhub.controllers;
 
 import it.unicam.cs.hackhub.application.dtos.HackathonDTO;
+import it.unicam.cs.hackhub.application.dtos.UserDTO;
 import it.unicam.cs.hackhub.application.mappers.DTOMapper;
 import it.unicam.cs.hackhub.application.services.HackathonService;
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
 import it.unicam.cs.hackhub.controllers.requests.UpdateHackathonRequest;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
+import it.unicam.cs.hackhub.model.entities.Judge;
+import it.unicam.cs.hackhub.model.entities.Mentor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,5 +51,34 @@ public class HackathonController {
                                         @RequestBody UpdateHackathonRequest req) {
         Hackathon updatedHackathon = hackathonService.updateHackathon(hackathonId, req);
         return dtoMapper.toDTO(updatedHackathon);
+    }
+
+    /**
+     * Assigns a further mentor to a hackathon.
+     *
+     * NOTE: the response describes the user who became a mentor, not the participation:
+     * what the client needs to know is who now mentors the hackathon.
+     */
+    @PostMapping("/{hackathonId}/mentors")
+    public UserDTO addMentor(@PathVariable Long hackathonId, @RequestParam String username) {
+        Mentor mentor = hackathonService.addMentor(hackathonId, username);
+        return dtoMapper.toDTO(mentor.getUser());
+    }
+
+    /**
+     * Removes a mentor from a hackathon.
+     */
+    @DeleteMapping("/{hackathonId}/mentors")
+    public void removeMentor(@PathVariable Long hackathonId, @RequestParam String username) {
+        hackathonService.removeMentor(hackathonId, username);
+    }
+
+    /**
+     * Replaces the judge of a hackathon with another user.
+     */
+    @PutMapping("/{hackathonId}/judge")
+    public UserDTO replaceJudge(@PathVariable Long hackathonId, @RequestParam String username) {
+        Judge judge = hackathonService.replaceJudge(hackathonId, username);
+        return dtoMapper.toDTO(judge.getUser());
     }
 }
