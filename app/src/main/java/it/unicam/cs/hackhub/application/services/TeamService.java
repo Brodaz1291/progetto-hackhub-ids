@@ -6,6 +6,7 @@ import it.unicam.cs.hackhub.model.entities.Team;
 import it.unicam.cs.hackhub.model.entities.TeamMember;
 import it.unicam.cs.hackhub.model.entities.User;
 import it.unicam.cs.hackhub.model.repositories.ParticipationRepository;
+import it.unicam.cs.hackhub.model.repositories.TeamMemberRepository;
 import it.unicam.cs.hackhub.model.repositories.TeamRepository;
 import it.unicam.cs.hackhub.model.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,16 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final ParticipationRepository participationRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     public TeamService(TeamRepository teamRepository,
                        UserRepository userRepository,
-                       ParticipationRepository participationRepository) {
+                       ParticipationRepository participationRepository,
+                       TeamMemberRepository teamMemberRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.participationRepository = participationRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
     /**
@@ -73,5 +77,14 @@ public class TeamService {
     public void addMember(User user, Team team) {
         TeamMember newMember = new TeamMember(user, team);
         team.getMembers().add(newMember);
+    }
+
+    /**
+     * Returns the membership of a user. A user belongs to at most one team at a time, so the
+     * membership is unique when it exists.
+     */
+    public TeamMember getTeamMember(Long userId) {
+        return teamMemberRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User is not a member of any team: " + userId));
     }
 }

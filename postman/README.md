@@ -38,13 +38,11 @@ respects this order.
 | `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, then updates its information |
 | `03 Team` | Creates a team with `member1` as its first member |
 | `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1` |
+| `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
 it as `{{hackathonId}}`, `{{teamId}}`, and so on.
-
-One variable is filled but not used yet: `memberId2`. It is there for the invitations to a
-team, which are not implemented yet.
 
 ## Why the data is what it is
 
@@ -73,7 +71,8 @@ This has two consequences:
   to register a username that already exists and to create a team with a name already taken,
   and both are rejected. `member1` would be refused as well, because it is already tied to the
   team created by the first run, and so would `member3`, left as the judge of the hackathon by
-  `04 Staff`. To run the collection again, restart the application first.
+  `04 Staff`, and `member2`, left in the team by `05 Invitations`. To run the collection again,
+  restart the application first.
 
 ## Running it from the command line
 
