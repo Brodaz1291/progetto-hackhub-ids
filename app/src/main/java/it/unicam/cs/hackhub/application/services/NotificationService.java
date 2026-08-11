@@ -26,4 +26,20 @@ public class NotificationService {
         log.info("NotificationService: notified judge {} and mentors [{}] of their assignment",
                 judge.getUser().getUsername(), mentorUsernames);
     }
+
+    /**
+     * The same notice serves assignment and removal, so the wording stays neutral.
+     */
+    public void notifyMentor(Mentor mentor) {
+        log.info("NotificationService: notified mentor {} of the change to their role",
+                mentor.getUser().getUsername());
+    }
+
+    /**
+     * The same notice serves assignment and revocation, so the wording stays neutral.
+     */
+    public void notifyJudge(Judge judge) {
+        log.info("NotificationService: notified judge {} of the change to their role",
+                judge.getUser().getUsername());
+    }
 }
