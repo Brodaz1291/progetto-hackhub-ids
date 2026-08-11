@@ -39,6 +39,7 @@ respects this order.
 | `03 Team` | Creates a team with `member1` as its first member |
 | `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1` |
 | `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
+| `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to

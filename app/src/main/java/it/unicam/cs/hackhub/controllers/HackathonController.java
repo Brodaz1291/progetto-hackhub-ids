@@ -10,6 +10,7 @@ import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/hackathons")
@@ -28,6 +31,36 @@ public class HackathonController {
     public HackathonController(HackathonService hackathonService, DTOMapper dtoMapper) {
         this.hackathonService = hackathonService;
         this.dtoMapper = dtoMapper;
+    }
+
+    @GetMapping
+    public List<HackathonDTO> getHackathons() {
+        List<Hackathon> hackathons = hackathonService.getAllHackathons();
+        return hackathons.stream().map(dtoMapper::toDTO).toList();
+    }
+
+    @GetMapping("/open")
+    public List<HackathonDTO> getOpenHackathons() {
+        List<Hackathon> hackathons = hackathonService.getOpenHackathons();
+        return hackathons.stream().map(dtoMapper::toDTO).toList();
+    }
+
+    /**
+     * Lists the hackathons for a visitor who is not authenticated. The hackathons read are
+     * the same ones {@link #getHackathons()} returns: what changes is only the conversion,
+     * because deciding how much of a hackathon a caller may see belongs to the presentation
+     * layer, not to the domain.
+     */
+    @GetMapping("/public")
+    public List<HackathonDTO> getPublicHackathons() {
+        List<Hackathon> hackathons = hackathonService.getAllHackathons();
+        return hackathons.stream().map(dtoMapper::toPublicDTO).toList();
+    }
+
+    @GetMapping("/{hackathonId}")
+    public HackathonDTO getHackathon(@PathVariable Long hackathonId) {
+        Hackathon hackathon = hackathonService.getHackathon(hackathonId);
+        return dtoMapper.toDTO(hackathon);
     }
 
     /**

@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -36,4 +37,10 @@ public class HackathonDTO {
     private HackathonState state;
 
     private String winnerTeamName;
+
+    private String organizerUsername;
+
+    private String judgeUsername;
+
+    private List<String> mentorUsernames;
 }

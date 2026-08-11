@@ -40,6 +40,23 @@ public class HackathonService {
         this.builderProvider = builderProvider;
     }
 
+    public List<Hackathon> getAllHackathons() {
+        return hackathonRepository.findAll();
+    }
+
+    /**
+     * Returns the hackathons that are still in their registration phase, the only ones a
+     * team can enrol in.
+     */
+    public List<Hackathon> getOpenHackathons() {
+        return hackathonRepository.findOpenForRegistration();
+    }
+
+    public Hackathon getHackathon(Long hackathonId) {
+        return hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+    }
+
     /**
      * Creates a hackathon in registration phase, assigns its staff and notifies it.
      */

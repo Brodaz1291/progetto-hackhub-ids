@@ -25,6 +25,10 @@ public class DTOMapper {
         String winnerTeamName = hackathon.getWinner() != null
                 ? hackathon.getWinner().getTeam().getName()
                 : null;
+        List<String> mentorUsernames = hackathon.getStaff().stream()
+                .filter(Mentor.class::isInstance)
+                .map(mentor -> mentor.getUser().getUsername())
+                .toList();
         return new HackathonDTO(
                 hackathon.getId(),
                 hackathon.getName(),
@@ -36,7 +40,22 @@ public class DTOMapper {
                 hackathon.getEndDate(),
                 hackathon.getMaxTeamSize(),
                 hackathon.getState(),
-                winnerTeamName);
+                winnerTeamName,
+                findStaffUsername(hackathon, Organizer.class),
+                findStaffUsername(hackathon, Judge.class),
+                mentorUsernames);
+    }
+
+    /**
+     * Organizer and judge are unique within the staff, but the lookup stays defensive: a
+     * hackathon whose staff is incomplete must not break the conversion.
+     */
+    private String findStaffUsername(Hackathon hackathon, Class<? extends StaffParticipation> role) {
+        return hackathon.getStaff().stream()
+                .filter(role::isInstance)
+                .findFirst()
+                .map(staff -> staff.getUser().getUsername())
+                .orElse(null);
     }
 
     public SubmissionDTO toDTO(Submission submission) {
@@ -89,6 +108,10 @@ public class DTOMapper {
         return new PaymentDTO(payment.getId(), payment.getAmount(), payment.getDate());
     }
 
+    /**
+     * The public projection describes the event, not who runs it: the identifier and the
+     * staff are left out of the visitor's view.
+     */
     public HackathonDTO toPublicDTO(Hackathon hackathon) {
         String winnerTeamName = hackathon.getWinner() != null
                 ? hackathon.getWinner().getTeam().getName()
@@ -104,6 +127,9 @@ public class DTOMapper {
                 hackathon.getEndDate(),
                 hackathon.getMaxTeamSize(),
                 hackathon.getState(),
-                winnerTeamName);
+                winnerTeamName,
+                null,
+                null,
+                null);
     }
 }
