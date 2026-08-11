@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
+import it.unicam.cs.hackhub.model.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,11 @@ public class NotificationService {
                 .collect(Collectors.joining(", "));
         log.info("NotificationService: notified judge {} and mentors [{}] of their assignment",
                 judge.getUser().getUsername(), mentorUsernames);
+    }
+
+    public void notifyUser(User user) {
+        log.info("NotificationService: notified user {} of the invitation received",
+                user.getUsername());
     }
 
     /**
