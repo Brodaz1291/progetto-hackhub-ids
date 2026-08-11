@@ -197,6 +197,54 @@ public class HackathonService {
     }
 
     /**
+     * Replaces the judge of a hackathon with another user and notifies both. Removal and
+     * assignment happen together: a hackathon is judged by exactly one judge, so it must
+     * never be left without one.
+     */
+    @Transactional
+    public Judge replaceJudge(Long hackathonId, String username) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        // the phase is checked before the user: once the evaluation is under way the
+        // replacement is impossible anyway, whoever the candidate is
+        if (!checkEvaluationNotStarted(hackathon)) {
+            throw new IllegalArgumentException("The judge cannot be replaced once the evaluation has started");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        if (!checkNoActiveParticipation(user)) {
+            throw new IllegalArgumentException("User already takes part in something else: " + username);
+        }
+        Judge oldJudge = hackathon.getStaff().stream()
+                .filter(Judge.class::isInstance)
+                .map(Judge.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Hackathon " + hackathonId + " has no judge"));
+
+        // the notice goes out before the removal: afterwards the participation no longer exists
+        notificationService.notifyJudge(oldJudge);
+        // removing the participation from the list is what deletes it: orphanRemoval takes
+        // care of the row
+        hackathon.getStaff().removeIf(staff -> staff.getId().equals(oldJudge.getId()));
+
+        Judge newJudge = new Judge(user, hackathon);
+        hackathon.getStaff().add(newJudge);
+        hackathonRepository.save(hackathon);
+
+        notificationService.notifyJudge(newJudge);
+        return newJudge;
+    }
+
+    /**
+     * The evaluations already released belong to the judge who expressed them through their
+     * participation, so the judge can only be replaced before the evaluation phase.
+     */
+    private boolean checkEvaluationNotStarted(Hackathon hackathon) {
+        return hackathon.getState() == HackathonState.REGISTRATION
+                || hackathon.getState() == HackathonState.RUNNING;
+    }
+
+    /**
      * A user takes part in one thing at a time: either a team membership or a staff role in
      * a hackathon that is still running. The query looks at both branches of the hierarchy.
      */
