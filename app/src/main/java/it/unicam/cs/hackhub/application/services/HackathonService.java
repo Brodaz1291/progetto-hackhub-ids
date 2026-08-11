@@ -7,12 +7,15 @@ import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import it.unicam.cs.hackhub.model.entities.Organizer;
+import it.unicam.cs.hackhub.model.entities.Participation;
 import it.unicam.cs.hackhub.model.entities.User;
 import it.unicam.cs.hackhub.model.enums.HackathonState;
 import it.unicam.cs.hackhub.model.repositories.HackathonRepository;
+import it.unicam.cs.hackhub.model.repositories.ParticipationRepository;
 import it.unicam.cs.hackhub.model.repositories.UserRepository;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -22,15 +25,18 @@ public class HackathonService {
 
     private final HackathonRepository hackathonRepository;
     private final UserRepository userRepository;
+    private final ParticipationRepository participationRepository;
     private final NotificationService notificationService;
     private final ObjectProvider<HackathonBuilder> builderProvider;
 
     public HackathonService(HackathonRepository hackathonRepository,
                             UserRepository userRepository,
+                            ParticipationRepository participationRepository,
                             NotificationService notificationService,
                             ObjectProvider<HackathonBuilder> builderProvider) {
         this.hackathonRepository = hackathonRepository;
         this.userRepository = userRepository;
+        this.participationRepository = participationRepository;
         this.notificationService = notificationService;
         this.builderProvider = builderProvider;
     }
@@ -139,5 +145,73 @@ public class HackathonService {
         hackathon.setStartDate(req.getStartDate());
         hackathon.setEndDate(req.getEndDate());
         hackathon.setMaxTeamSize(req.getMaxTeamSize());
+    }
+
+    /**
+     * Assigns a further mentor to a hackathon and notifies them.
+     */
+    @Transactional
+    public Mentor addMentor(Long hackathonId, String username) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        if (!checkNoActiveParticipation(user)) {
+            throw new IllegalArgumentException("User already takes part in something else: " + username);
+        }
+
+        Mentor mentor = new Mentor(user, hackathon);
+        // the participation owns the foreign key, but it also has to appear in the list for
+        // the cascade to persist it
+        hackathon.getStaff().add(mentor);
+        hackathonRepository.save(hackathon);
+
+        notificationService.notifyMentor(mentor);
+        return mentor;
+    }
+
+    /**
+     * Removes a mentor from a hackathon and notifies them. The calls they had planned lapse
+     * with the participation.
+     */
+    @Transactional
+    public void removeMentor(Long hackathonId, Long mentorId) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        Participation participation = participationRepository.findById(mentorId)
+                .orElseThrow(() -> new IllegalArgumentException("Participation not found: " + mentorId));
+        if (!(participation instanceof Mentor mentor) || !mentor.getHackathon().getId().equals(hackathonId)) {
+            throw new IllegalArgumentException(
+                    "Participation " + mentorId + " is not a mentor of hackathon " + hackathonId);
+        }
+        if (!checkNotLastMentor(hackathon)) {
+            throw new IllegalArgumentException("The last mentor cannot be removed, only replaced");
+        }
+
+        // the notice goes out before the removal: afterwards the mentor no longer exists
+        notificationService.notifyMentor(mentor);
+        // removing the participation from the list is what deletes it: orphanRemoval takes
+        // care of the row and, in cascade, of the calls the mentor had planned
+        hackathon.getStaff().removeIf(staff -> staff.getId().equals(mentorId));
+        hackathonRepository.save(hackathon);
+    }
+
+    /**
+     * A user takes part in one thing at a time: either a team membership or a staff role in
+     * a hackathon that is still running. The query looks at both branches of the hierarchy.
+     */
+    private boolean checkNoActiveParticipation(User user) {
+        return participationRepository.findActiveByUserId(user.getId()).isEmpty();
+    }
+
+    /**
+     * A hackathon is mentored by at least one mentor, so the last one can only be replaced:
+     * another mentor has to be added before removing them.
+     */
+    private boolean checkNotLastMentor(Hackathon hackathon) {
+        long mentorCount = hackathon.getStaff().stream()
+                .filter(Mentor.class::isInstance)
+                .count();
+        return mentorCount > 1;
     }
 }
