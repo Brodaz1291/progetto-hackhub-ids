@@ -538,6 +538,125 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "04 Staff",
+			"description": "Changes to the staff of the hackathon created in 02: a mentor is added and removed, then the judge is replaced. All three requests use member3, the last free user of the seeder.",
+			"item": [
+				{
+					"name": "Add mentor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"member3 is the new mentor\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}/mentors?username=member3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}",
+								"mentors"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member3"
+								}
+							]
+						},
+						"description": "member3 is the only user still free at this point: the others are already staff of the hackathon or members of the team created in 03. The response describes the user who became a mentor, not the participation."
+					}
+				},
+				{
+					"name": "Remove mentor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}/mentors?username=member3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}",
+								"mentors"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member3"
+								}
+							]
+						},
+						"description": "The hackathon has three mentors after the previous request, so member3 is not the last one and can be removed. The response is empty."
+					}
+				},
+				{
+					"name": "Replace judge",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"member3 is the new judge\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}/judge?username=member3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}",
+								"judge"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "member3"
+								}
+							]
+						},
+						"description": "It runs after the removal on purpose: member3 becomes free again only once the mentor participation is gone, otherwise the replacement would be refused."
+					}
+				}
+			]
 		}
 	],
 	"variable": [

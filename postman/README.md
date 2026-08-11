@@ -37,6 +37,7 @@ respects this order.
 | `01 Auth` | Registers a new user, then logs it in and out |
 | `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, then updates its information |
 | `03 Team` | Creates a team with `member1` as its first member |
+| `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1` |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -71,7 +72,8 @@ This has two consequences:
 - the sequence cannot be run twice on the same running application: the second run would try
   to register a username that already exists and to create a team with a name already taken,
   and both are rejected. `member1` would be refused as well, because it is already tied to the
-  team created by the first run. To run the collection again, restart the application first.
+  team created by the first run, and so would `member3`, left as the judge of the hackathon by
+  `04 Staff`. To run the collection again, restart the application first.
 
 ## Running it from the command line
 
