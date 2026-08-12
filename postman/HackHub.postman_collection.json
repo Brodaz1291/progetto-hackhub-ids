@@ -916,6 +916,48 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "07 Leave team",
+			"description": "The last folder of the collection, and it has to stay last: it changes the composition of the team, so every folder that counts on the two members left by 05 Invitations runs before it. member2 walks out and member1, who created the team, stays behind as its only member.",
+			"item": [
+				{
+					"name": "Leave team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/members?userId={{memberId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"members"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{memberId2}}"
+								}
+							]
+						},
+						"description": "The one who leaves is member2, not member1: member1 created the team and is the only other member, so letting them out would leave the team empty. An empty team with no concluded hackathon behind it is dissolved, and the team the rest of the collection refers to would be gone. The response is empty."
+					}
+				}
+			]
 		}
 	],
 	"variable": [

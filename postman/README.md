@@ -40,6 +40,7 @@ respects this order.
 | `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1` |
 | `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
+| `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -72,8 +73,10 @@ This has two consequences:
   to register a username that already exists and to create a team with a name already taken,
   and both are rejected. `member1` would be refused as well, because it is already tied to the
   team created by the first run, and so would `member3`, left as the judge of the hackathon by
-  `04 Staff`, and `member2`, left in the team by `05 Invitations`. To run the collection again,
-  restart the application first.
+  `04 Staff`. `member2` is the exception, because `07 Leave team` takes them out of the team at
+  the very end, leaving them free to be invited again — but that changes nothing, since the run
+  is already broken well before the invitations. To run the collection again, restart the
+  application first.
 
 ## Running it from the command line
 
