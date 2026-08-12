@@ -73,4 +73,45 @@ public class RegistrationService {
                 && LocalDateTime.now().isBefore(hackathon.getRegistrationDeadline())
                 && team.getMembers().size() <= hackathon.getMaxTeamSize();
     }
+
+    /**
+     * Disqualifies the registration of a team, recording the reason, and notifies the team.
+     */
+    @Transactional
+    public void disqualifyTeam(Long registrationId, String reason) {
+        Registration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+        if (!checkHackathonNotConcluded(registration.getHackathon())) {
+            throw new IllegalArgumentException("A team cannot be disqualified from a concluded hackathon");
+        }
+        if (!checkNotAlreadyDisqualified(registration)) {
+            throw new IllegalArgumentException("Registration " + registrationId + " is already disqualified");
+        }
+
+        applyDisqualification(registration, reason);
+        registrationRepository.save(registration);
+
+        notificationService.notifyTeam(registration.getTeam());
+    }
+
+    /**
+     * Once the event is over the disqualification has no object left: the result is settled
+     * and the winner already proclaimed.
+     */
+    private boolean checkHackathonNotConcluded(Hackathon hackathon) {
+        return hackathon.getState() != HackathonState.CONCLUDED;
+    }
+
+    private boolean checkNotAlreadyDisqualified(Registration registration) {
+        return registration.getState() != RegistrationState.DISQUALIFIED;
+    }
+
+    /**
+     * The disqualification marks the registration, it does not remove it: submissions,
+     * evaluations and the history of the event survive the exclusion of the team.
+     */
+    private void applyDisqualification(Registration registration, String reason) {
+        registration.setState(RegistrationState.DISQUALIFIED);
+        registration.setDisqualificationReason(reason);
+    }
 }
