@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
+import it.unicam.cs.hackhub.model.entities.Team;
 import it.unicam.cs.hackhub.model.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,5 +48,13 @@ public class NotificationService {
     public void notifyJudge(Judge judge) {
         log.info("NotificationService: notified judge {} of the change to their role",
                 judge.getUser().getUsername());
+    }
+
+    /**
+     * The same notice serves registration and disqualification, so the wording stays neutral.
+     */
+    public void notifyTeam(Team team) {
+        log.info("NotificationService: notified team {} of the change to their registration",
+                team.getName());
     }
 }
