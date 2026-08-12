@@ -1,0 +1,76 @@
+package it.unicam.cs.hackhub.application.services;
+
+import it.unicam.cs.hackhub.model.entities.Hackathon;
+import it.unicam.cs.hackhub.model.entities.Registration;
+import it.unicam.cs.hackhub.model.entities.Team;
+import it.unicam.cs.hackhub.model.enums.HackathonState;
+import it.unicam.cs.hackhub.model.enums.RegistrationState;
+import it.unicam.cs.hackhub.model.repositories.HackathonRepository;
+import it.unicam.cs.hackhub.model.repositories.RegistrationRepository;
+import it.unicam.cs.hackhub.model.repositories.TeamRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+@Service
+public class RegistrationService {
+
+    private final RegistrationRepository registrationRepository;
+    private final HackathonRepository hackathonRepository;
+    private final TeamRepository teamRepository;
+    private final NotificationService notificationService;
+
+    public RegistrationService(RegistrationRepository registrationRepository,
+                               HackathonRepository hackathonRepository,
+                               TeamRepository teamRepository,
+                               NotificationService notificationService) {
+        this.registrationRepository = registrationRepository;
+        this.hackathonRepository = hackathonRepository;
+        this.teamRepository = teamRepository;
+        this.notificationService = notificationService;
+    }
+
+    /**
+     * Enrols a team in a hackathon still open to registrations and notifies it.
+     */
+    @Transactional
+    public Registration registerTeam(Long hackathonId, Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        if (isTeamBusy(team)) {
+            throw new IllegalArgumentException("Team " + teamId + " is already taking part in a hackathon");
+        }
+        if (!checkRegistrationConditions(team, hackathon)) {
+            throw new IllegalArgumentException("Registration conditions not satisfied for hackathon " + hackathonId);
+        }
+
+        Registration registration = new Registration(LocalDateTime.now(), RegistrationState.REGISTERED);
+        registration.setHackathon(hackathon);
+        registration.setTeam(team);
+        // the registration owns the foreign key, but it also has to appear in the list for
+        // the cascade to persist it
+        hackathon.getRegistrations().add(registration);
+        hackathonRepository.save(hackathon);
+
+        notificationService.notifyTeam(team);
+        return registration;
+    }
+
+    /**
+     * A team takes part in one hackathon at a time. The query looks at the phase of the
+     * hackathon only: a disqualified team stays busy until the event is over, because the
+     * disqualification is a sanction, not a way out.
+     */
+    private boolean isTeamBusy(Team team) {
+        return registrationRepository.findActiveByTeam(team).isPresent();
+    }
+
+    private boolean checkRegistrationConditions(Team team, Hackathon hackathon) {
+        return hackathon.getState() == HackathonState.REGISTRATION
+                && LocalDateTime.now().isBefore(hackathon.getRegistrationDeadline())
+                && team.getMembers().size() <= hackathon.getMaxTeamSize();
+    }
+}
