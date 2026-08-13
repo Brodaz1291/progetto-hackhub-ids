@@ -50,13 +50,16 @@ public class RegistrationService {
         Registration registration = new Registration(LocalDateTime.now(), RegistrationState.REGISTERED);
         registration.setHackathon(hackathon);
         registration.setTeam(team);
-        // the registration owns the foreign key, but it also has to appear in the list for
-        // the cascade to persist it
+        // the hackathon is managed inside the transaction, so the registration is added to its
+        // list to keep the in-memory graph coherent for whoever reads it next
         hackathon.getRegistrations().add(registration);
-        hackathonRepository.save(hackathon);
+        // saving the transient registration is a persist, and IDENTITY assigns the id at once.
+        // Saving the hackathon instead would be a merge: through the cascade it persists a copy
+        // of the registration and leaves this instance without an id
+        Registration savedRegistration = registrationRepository.save(registration);
 
         notificationService.notifyTeam(team);
-        return registration;
+        return savedRegistration;
     }
 
     /**
