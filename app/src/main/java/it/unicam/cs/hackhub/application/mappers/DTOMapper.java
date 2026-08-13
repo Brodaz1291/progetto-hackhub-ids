@@ -58,6 +58,20 @@ public class DTOMapper {
                 .orElse(null);
     }
 
+    /**
+     * The projection carries the identifier because the registration is what the later
+     * operations of the event refer to: submissions, support requests, reports and the prize
+     * are all addressed by registration id.
+     */
+    public RegistrationDTO toDTO(Registration registration) {
+        return new RegistrationDTO(
+                registration.getId(),
+                registration.getTeam().getName(),
+                registration.getHackathon().getName(),
+                registration.getRegistrationDate(),
+                registration.getState());
+    }
+
     public SubmissionDTO toDTO(Submission submission) {
         Integer score = null;
         String judgment = null;
