@@ -919,7 +919,7 @@
 		},
 		{
 			"name": "07 Leave team",
-			"description": "The last folder of the collection, and it has to stay last: it changes the composition of the team, so every folder that counts on the two members left by 05 Invitations runs before it. member2 walks out and member1, who created the team, stays behind as its only member.",
+			"description": "It changes the composition of the team, so every folder that counts on the two members left by 05 Invitations runs before it. member2 walks out and member1, who created the team, stays behind as its only member. Only 08 Registration runs after, and it takes part in the hackathon with member1 alone.",
 			"item": [
 				{
 					"name": "Leave team",
@@ -955,6 +955,92 @@
 							]
 						},
 						"description": "The one who leaves is member2, not member1: member1 created the team and is the only other member, so letting them out would leave the team empty. An empty team with no concluded hackathon behind it is dissolved, and the team the rest of the collection refers to would be gone. The response is empty."
+					}
+				}
+			]
+		},
+		{
+			"name": "08 Registration",
+			"description": "Registers the team in the hackathon and then disqualifies it. It goes last because it produces the state the next features graft onto: submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations.",
+			"item": [
+				{
+					"name": "Register team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the team registered is Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
+									"pm.test(\"the registration carries its id\", () => pm.expect(pm.response.json().id).to.not.be.null);",
+									"pm.collectionVariables.set(\"registrationId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations?hackathonId={{hackathonId}}&teamId={{teamId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "teamId",
+									"value": "{{teamId}}"
+								}
+							]
+						},
+						"description": "The hackathon is still in REGISTRATION and its registrationDeadline, moved to 2026-09-05 by the update in 02 Hackathon, is compared with the current date: an expired deadline would reject the registration. The team is taking part in nothing else and its size fits maxTeamSize. The response carries the registrationId every later operation of the event refers to."
+					}
+				},
+				{
+					"name": "Disqualify team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/{{registrationId}}/disqualification?reason=Rule violation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"{{registrationId}}",
+								"disqualification"
+							],
+							"query": [
+								{
+									"key": "reason",
+									"value": "Rule violation"
+								}
+							]
+						},
+						"description": "The disqualification marks the registration, it does not remove it: afterwards the registration is still there, with state DISQUALIFIED and the reason recorded, and so are the submissions and the history of the event. This is why it is a PUT on the registration and not a DELETE of it. The response is empty."
 					}
 				}
 			]
@@ -1003,6 +1089,10 @@
 		},
 		{
 			"key": "invitationId",
+			"value": ""
+		},
+		{
+			"key": "registrationId",
 			"value": ""
 		}
 	]
