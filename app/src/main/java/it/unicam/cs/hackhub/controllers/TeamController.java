@@ -8,6 +8,7 @@ import it.unicam.cs.hackhub.controllers.requests.CreateTeamRequest;
 import it.unicam.cs.hackhub.designPatterns.TeamFacade;
 import it.unicam.cs.hackhub.model.entities.Invitation;
 import it.unicam.cs.hackhub.model.entities.Team;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +45,15 @@ public class TeamController {
                               @RequestParam Long creatorId) {
         Team createdTeam = teamService.createTeam(req, creatorId);
         return dtoMapper.toDTO(createdTeam);
+    }
+
+    /**
+     * Removes the membership of a user: the path carries no team id because the membership is
+     * unique, so the user alone identifies it.
+     */
+    @DeleteMapping("/members")
+    public void leaveTeam(@RequestParam Long userId) {
+        teamService.leaveTeam(userId);
     }
 
     @PostMapping("/{teamId}/invitations")
