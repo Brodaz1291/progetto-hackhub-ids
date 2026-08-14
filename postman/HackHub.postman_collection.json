@@ -961,7 +961,7 @@
 		},
 		{
 			"name": "08 Registration",
-			"description": "Registers the team in the hackathon and then disqualifies it. It goes last because it produces the state the next features graft onto: submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations.",
+			"description": "Registers the team in the hackathon, and nothing else: it produces the state the next features graft onto, because submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations. The disqualification used to live here and has been moved to 10 Disqualification, at the very end, because it closes the participation of the team.",
 			"item": [
 				{
 					"name": "Register team",
@@ -1005,7 +1005,56 @@
 						},
 						"description": "The hackathon is still in REGISTRATION and its registrationDeadline, moved to 2026-09-05 by the update in 02 Hackathon, is compared with the current date: an expired deadline would reject the registration. The team is taking part in nothing else and its size fits maxTeamSize. The response carries the registrationId every later operation of the event refers to."
 					}
-				},
+				}
+			]
+		},
+		{
+			"name": "09 Submissions",
+			"description": "Reads back the submissions of the hackathon. The upload is missing on purpose: a submission is accepted only while the hackathon is RUNNING, and in the collection the hackathon stays in REGISTRATION, because no endpoint moves the state forward — the transitions follow the dates of the event and the temporal mechanism does not exist yet. The upload request will be added when it does. What is left is the list the judge reads before evaluating, and it comes back empty for the same reason.",
+			"item": [
+				{
+					"name": "List submissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+									"pm.test(\"no submission has been uploaded yet\", () => pm.expect(pm.response.json()).to.be.empty);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The submissions of the disqualified teams are left out by projection: the query behind this list filters them, so they never reach the judge. Here the list is empty because the hackathon never leaves REGISTRATION and no submission can be uploaded."
+					}
+				}
+			]
+		},
+		{
+			"name": "10 Disqualification",
+			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
+			"item": [
 				{
 					"name": "Disqualify team",
 					"event": [
