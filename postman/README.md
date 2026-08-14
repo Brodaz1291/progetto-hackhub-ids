@@ -46,6 +46,7 @@ respects this order.
 | `10 Submissions` | Uploads the submission of the team, then reads it back from the list the judge sees and one by one through its id |
 | `11 Support requests` | Sends a support request, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
 | `12 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
+| `13 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -69,9 +70,10 @@ ones that decide the phases are those of the update: start on `2026-02-16T09:00`
 
 **The disqualification runs last, in a folder of its own.** It is a terminal operation: once
 the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
-the middle of the collection would block everything that comes after it. `11 Disqualification`
+the middle of the collection would block everything that comes after it. `12 Disqualification`
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
-disqualification marks the registration instead of removing it.
+disqualification marks the registration instead of removing it. Only `13 Clock` runs after, and
+it touches the hackathon rather than the team.
 
 ## How time works in the collection
 
@@ -96,13 +98,17 @@ collection would stay open to registrations forever, and both `10 Submissions` a
 
 `09 Clock` therefore takes the time to `2026-02-16T10:00`, an hour after the start date set by
 the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the two folders that
-follow work.
+follow work. `13 Clock` closes the sequence at the other end, moving the time to
+`2026-02-18T19:00`, past the end date: the hackathon reaches `EVALUATION` and the elaborates are
+frozen. The two folders together cover both the transitions that happen on their own — the
+third one, towards `CONCLUDED`, is explicit and belongs to the proclamation of the winner.
 
 **The transitions happen while reading.** There is no scheduler: every service that loads a
 hackathon brings its phase up to date first. So the passage to `RUNNING` is not the effect of
-the `PUT` on the clock, but of the first request that reads the hackathon afterwards. This is
-also why the submission uploaded by `10 Submissions` is dated `2026-02-16`: the platform stamps
-it with the time of its clock, not with the real one.
+the `PUT` on the clock, but of the first request that reads the hackathon afterwards — which is
+why in `13 Clock` the assertion on the state sits on the `GET` and not on the `PUT` that moves
+the time. This is also why the submission uploaded by `10 Submissions` is dated `2026-02-16`:
+the platform stamps it with the time of its clock, not with the real one.
 
 **The endpoints of the clock are a development tool, not a use case.** They live under
 `/api/dev/clock` and exist only in the `dev` profile: in any other profile the controller is not
@@ -112,8 +118,8 @@ the whole life cycle of an event in a single run, without waiting for the real d
 ## What the collection does not cover yet
 
 **The evaluation of the submissions and the proclamation of the winner**, which belong to
-features not implemented yet. When they arrive, the collection will move the clock past the end
-date as well, to take the hackathon into `EVALUATION`.
+features not implemented yet. The collection already leaves the hackathon in `EVALUATION`, the
+phase they work in, so they will graft onto the end of it.
 
 ## The database is emptied at every restart
 

@@ -1402,6 +1402,80 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "13 Clock",
+			"description": "The second half of the life cycle: the time moves past the end date and the hackathon closes its doors to the submissions. Together with 09 Clock this folder covers both temporal transitions of the state diagram — REGISTRATION to RUNNING on the start date, RUNNING to EVALUATION on the end date — which are the only ones no one commands: the last one, towards CONCLUDED, is explicit and belongs to the proclamation of the winner. It runs after the disqualification on purpose: moving the phase earlier would change the one 12 Disqualification works in.",
+			"item": [
+				{
+					"name": "Move clock past the end of the hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the clock is past the day the hackathon ends\", () => pm.expect(pm.response.text()).to.have.string(\"2026-02-18\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock?instant=2026-02-18T19:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							],
+							"query": [
+								{
+									"key": "instant",
+									"value": "2026-02-18T19:00:00"
+								}
+							]
+						},
+						"description": "An hour after the end date set by the update in 02 Hackathon. From here on the elaborates are frozen: a further upload would be refused, because submissions belong to the event in progress."
+					}
+				},
+				{
+					"name": "Get hackathon in evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon has moved on to the evaluation\", () => pm.expect(pm.response.json().state).to.eql(\"EVALUATION\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							]
+						},
+						"description": "The transition is not the effect of the request above: the clock alone changes nothing, and the phase is brought up to date by the first service that loads the hackathon afterwards. This read is that service, which is why the assertion on the state lives here and not on the PUT."
+					}
+				}
+			]
 		}
 	],
 	"variable": [
