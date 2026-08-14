@@ -41,7 +41,9 @@ respects this order.
 | `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
-| `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId`, and then disqualifies it |
+| `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
+| `09 Submissions` | Reads back the submissions of the hackathon, a list that is still empty (see below) |
+| `10 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -59,6 +61,25 @@ by `member1`.
 are coherent with one another — `registrationDeadline <= startDate < endDate` — otherwise the
 creation is rejected. It does not compare them with the current date, so they are in the future
 only to make the scenario realistic, not because an earlier date would be refused.
+
+**The disqualification runs last, in a folder of its own.** It is a terminal operation: once
+the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
+the middle of the collection would block everything that comes after it. `10 Disqualification`
+still works on the `registrationId` saved by `08 Registration`, which stays valid because the
+disqualification marks the registration instead of removing it.
+
+## What the collection does not cover yet
+
+**The upload of a submission is missing.** A submission is accepted only while the hackathon is
+`RUNNING`, but the hackathon of the collection never leaves `REGISTRATION`: the state of an
+event follows its dates, and no endpoint moves it forward because the temporal mechanism is not
+implemented yet. A `POST /api/submissions` would therefore be refused every time, so the folder
+`09 Submissions` only reads the list — which for the same reason comes back empty. The request
+will be added once an event can reach `RUNNING`.
+
+This is a limit of the platform, not of the collection: today no hackathon can change state at
+all. The same limit will apply to the support requests, which are sent during the event as
+well.
 
 ## The database is emptied at every restart
 
