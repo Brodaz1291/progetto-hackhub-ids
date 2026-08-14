@@ -1,0 +1,86 @@
+package it.unicam.cs.hackhub.application.services;
+
+import it.unicam.cs.hackhub.model.entities.Hackathon;
+import it.unicam.cs.hackhub.model.entities.Registration;
+import it.unicam.cs.hackhub.model.entities.SupportRequest;
+import it.unicam.cs.hackhub.model.enums.HackathonState;
+import it.unicam.cs.hackhub.model.enums.SupportRequestState;
+import it.unicam.cs.hackhub.model.repositories.RegistrationRepository;
+import it.unicam.cs.hackhub.model.repositories.SupportRequestRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+
+@Service
+public class SupportRequestService {
+
+    private final SupportRequestRepository supportRequestRepository;
+    private final RegistrationRepository registrationRepository;
+
+    public SupportRequestService(SupportRequestRepository supportRequestRepository,
+                                 RegistrationRepository registrationRepository) {
+        this.supportRequestRepository = supportRequestRepository;
+        this.registrationRepository = registrationRepository;
+    }
+
+    /**
+     * Registers a support request of a team. The request stays pending until a mentor takes
+     * it over by scheduling a call.
+     */
+    public SupportRequest sendSupportRequest(Long registrationId, String description) {
+        Registration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+        if (!checkHackathonIsRunning(registration.getHackathon())) {
+            throw new IllegalArgumentException("Support is available only while the hackathon is running");
+        }
+        if (!checkDescription(description)) {
+            throw new IllegalArgumentException("Description of the support request is required");
+        }
+
+        SupportRequest supportRequest = new SupportRequest(registration, description, SupportRequestState.PENDING);
+        return supportRequestRepository.save(supportRequest);
+    }
+
+    /**
+     * Support belongs to the event in progress: before it starts there is nothing to ask help
+     * about, once it is over the event is closed.
+     */
+    private boolean checkHackathonIsRunning(Hackathon hackathon) {
+        return hackathon.getState() == HackathonState.RUNNING;
+    }
+
+    private boolean checkDescription(String description) {
+        return StringUtils.hasText(description);
+    }
+
+    /**
+     * Returns the requests of a hackathon that no mentor has taken over yet.
+     */
+    public List<SupportRequest> getPendingRequests(Long hackathonId) {
+        return supportRequestRepository.findPendingByHackathonId(hackathonId);
+    }
+
+    /**
+     * Returns all the requests sent by a team, whatever their state.
+     */
+    public List<SupportRequest> getTeamRequests(Long registrationId) {
+        return supportRequestRepository.findByRegistrationId(registrationId);
+    }
+
+    public SupportRequest getSupportRequest(Long supportRequestId) {
+        return supportRequestRepository.findById(supportRequestId)
+                .orElseThrow(() -> new IllegalArgumentException("Support request not found: " + supportRequestId));
+    }
+
+    /**
+     * Marks a request as handled. Differently from the other state changes of the platform
+     * this method is public, because the caller is CallService: the request is taken over
+     * when a mentor schedules the call. The saving happens here since the caller cannot know
+     * whether this service still has to persist something.
+     */
+    public void markHandled(SupportRequest supportRequest) {
+        supportRequest.setStatus(SupportRequestState.HANDLED);
+        supportRequestRepository.save(supportRequest);
+    }
+}
