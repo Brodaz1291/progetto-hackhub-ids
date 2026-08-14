@@ -27,34 +27,46 @@ public class HackathonService {
     private final ParticipationRepository participationRepository;
     private final NotificationService notificationService;
     private final ObjectProvider<HackathonBuilder> builderProvider;
+    private final HackathonLifecycle hackathonLifecycle;
 
     public HackathonService(HackathonRepository hackathonRepository,
                             UserRepository userRepository,
                             ParticipationRepository participationRepository,
                             NotificationService notificationService,
-                            ObjectProvider<HackathonBuilder> builderProvider) {
+                            ObjectProvider<HackathonBuilder> builderProvider,
+                            HackathonLifecycle hackathonLifecycle) {
         this.hackathonRepository = hackathonRepository;
         this.userRepository = userRepository;
         this.participationRepository = participationRepository;
         this.notificationService = notificationService;
         this.builderProvider = builderProvider;
+        this.hackathonLifecycle = hackathonLifecycle;
     }
 
     public List<Hackathon> getAllHackathons() {
-        return hackathonRepository.findAll();
+        List<Hackathon> hackathons = hackathonRepository.findAll();
+        hackathons.forEach(hackathonLifecycle::refreshState);
+        return hackathons;
     }
 
     /**
      * Returns the hackathons that are still in their registration phase, the only ones a
-     * team can enrol in.
+     * team can enrol in. The query selects the ones the database still records as open, but
+     * the phase is decided by the dates: the ones the refresh has just moved on are left out.
      */
     public List<Hackathon> getOpenHackathons() {
-        return hackathonRepository.findOpenForRegistration();
+        List<Hackathon> hackathons = hackathonRepository.findOpenForRegistration();
+        hackathons.forEach(hackathonLifecycle::refreshState);
+        return hackathons.stream()
+                .filter(hackathon -> hackathon.getState() == HackathonState.REGISTRATION)
+                .toList();
     }
 
     public Hackathon getHackathon(Long hackathonId) {
-        return hackathonRepository.findById(hackathonId)
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
+        return hackathon;
     }
 
     /**

@@ -11,6 +11,7 @@ import it.unicam.cs.hackhub.model.repositories.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -20,15 +21,21 @@ public class RegistrationService {
     private final HackathonRepository hackathonRepository;
     private final TeamRepository teamRepository;
     private final NotificationService notificationService;
+    private final HackathonLifecycle hackathonLifecycle;
+    private final Clock clock;
 
     public RegistrationService(RegistrationRepository registrationRepository,
                                HackathonRepository hackathonRepository,
                                TeamRepository teamRepository,
-                               NotificationService notificationService) {
+                               NotificationService notificationService,
+                               HackathonLifecycle hackathonLifecycle,
+                               Clock clock) {
         this.registrationRepository = registrationRepository;
         this.hackathonRepository = hackathonRepository;
         this.teamRepository = teamRepository;
         this.notificationService = notificationService;
+        this.hackathonLifecycle = hackathonLifecycle;
+        this.clock = clock;
     }
 
     /**
@@ -40,6 +47,7 @@ public class RegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         if (isTeamBusy(team)) {
             throw new IllegalArgumentException("Team " + teamId + " is already taking part in a hackathon");
         }
@@ -47,7 +55,7 @@ public class RegistrationService {
             throw new IllegalArgumentException("Registration conditions not satisfied for hackathon " + hackathonId);
         }
 
-        Registration registration = new Registration(LocalDateTime.now(), RegistrationState.REGISTERED);
+        Registration registration = new Registration(LocalDateTime.now(clock), RegistrationState.REGISTERED);
         registration.setHackathon(hackathon);
         registration.setTeam(team);
         // the hackathon is managed inside the transaction, so the registration is added to its
@@ -73,7 +81,7 @@ public class RegistrationService {
 
     private boolean checkRegistrationConditions(Team team, Hackathon hackathon) {
         return hackathon.getState() == HackathonState.REGISTRATION
-                && LocalDateTime.now().isBefore(hackathon.getRegistrationDeadline())
+                && LocalDateTime.now(clock).isBefore(hackathon.getRegistrationDeadline())
                 && team.getMembers().size() <= hackathon.getMaxTeamSize();
     }
 
