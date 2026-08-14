@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class SubmissionService {
@@ -81,5 +82,18 @@ public class SubmissionService {
         submission.setDescription(description);
         submission.setLink(link);
         submission.setSubmissionDate(LocalDateTime.now());
+    }
+
+    /**
+     * Returns the submissions of a hackathon, leaving out the ones of the disqualified teams:
+     * they are excluded by projection, so they never reach who reads this list.
+     */
+    public List<Submission> getSubmissions(Long hackathonId) {
+        return submissionRepository.findByHackathonIdNotDisqualified(hackathonId);
+    }
+
+    public Submission getSubmission(Long submissionId) {
+        return submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
     }
 }
