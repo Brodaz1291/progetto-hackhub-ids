@@ -42,9 +42,10 @@ respects this order.
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
-| `09 Submissions` | Reads back the submissions of the hackathon, a list that is still empty (see below) |
-| `10 Support requests` | Reads back the pending support requests of the hackathon, a list that is still empty (see below) |
-| `11 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
+| `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
+| `10 Submissions` | Uploads the submission of the team, then reads it back from the list the judge sees and one by one through its id |
+| `11 Support requests` | Sends a support request, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
+| `12 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -58,10 +59,13 @@ thing at a time: creating a hackathon makes `organizer1` its organizer, `judge1`
 `member1`, `member2` and `member3` are still free when `03 Team` runs, so the team is created
 by `member1`.
 
-**The dates of the hackathon are in September 2026.** What the application checks is that they
-are coherent with one another — `registrationDeadline <= startDate < endDate` — otherwise the
-creation is rejected. It does not compare them with the current date, so they are in the future
-only to make the scenario realistic, not because an earlier date would be refused.
+**The dates of the hackathon are in February 2026.** What the application checks at creation is
+that they are coherent with one another — `registrationDeadline <= startDate < endDate` —
+otherwise the request is rejected. They are close to the instant the clock starts from because
+the phases of an event follow its dates: keeping them a couple of weeks away makes the jumps of
+`09 Clock` short and the sequence easy to read. Note that `02 Hackathon` updates them, so the
+ones that decide the phases are those of the update: start on `2026-02-16T09:00`, end on
+`2026-02-18T18:00`.
 
 **The disqualification runs last, in a folder of its own.** It is a terminal operation: once
 the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
@@ -69,27 +73,47 @@ the middle of the collection would block everything that comes after it. `11 Dis
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
 disqualification marks the registration instead of removing it.
 
+## How time works in the collection
+
+The platform does not read the clock of the machine. It reads a `Clock` bean configured in
+`application.properties`:
+
+```
+app.time.mode=fixed
+app.time.fixed=2026-02-01T18:00:01
+```
+
+With `mode=fixed` the application starts frozen on that instant, and the collection can move it
+where it needs to. With `mode=system` it would follow the real time instead, and the requests of
+`09 Clock` would be refused with a message saying so.
+
+**Why the collection needs to move the time.** The phases of a hackathon are not commanded by
+anyone: an event passes from `REGISTRATION` to `RUNNING` when its start date arrives, and from
+`RUNNING` to `EVALUATION` when its end date does. A submission is accepted only while the event
+is `RUNNING`, and so is a support request. Without moving the clock the hackathon of the
+collection would stay open to registrations forever, and both `10 Submissions` and
+`11 Support requests` would be refused every time.
+
+`09 Clock` therefore takes the time to `2026-02-16T10:00`, an hour after the start date set by
+the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the two folders that
+follow work.
+
+**The transitions happen while reading.** There is no scheduler: every service that loads a
+hackathon brings its phase up to date first. So the passage to `RUNNING` is not the effect of
+the `PUT` on the clock, but of the first request that reads the hackathon afterwards. This is
+also why the submission uploaded by `10 Submissions` is dated `2026-02-16`: the platform stamps
+it with the time of its clock, not with the real one.
+
+**The endpoints of the clock are a development tool, not a use case.** They live under
+`/api/dev/clock` and exist only in the `dev` profile: in any other profile the controller is not
+created at all, so the paths do not answer. They are there to let a demonstration walk through
+the whole life cycle of an event in a single run, without waiting for the real dates.
+
 ## What the collection does not cover yet
 
-**The upload of a submission is missing.** A submission is accepted only while the hackathon is
-`RUNNING`, but the hackathon of the collection never leaves `REGISTRATION`: the state of an
-event follows its dates, and no endpoint moves it forward because the temporal mechanism is not
-implemented yet. A `POST /api/submissions` would therefore be refused every time, so the folder
-`09 Submissions` only reads the list — which for the same reason comes back empty. The request
-will be added once an event can reach `RUNNING`.
-
-**The sending of a support request is missing too, for the same reason.** Support is available
-only while the hackathon is `RUNNING`, because before it starts there is nothing to ask help
-about and afterwards the event is closed. A `POST /api/support-requests` would therefore be
-refused every time, so the folder `10 Support requests` only reads the pending ones — a list
-that comes back empty because nothing can be sent. This request too will be added once an event
-can reach `RUNNING`.
-
-The detail of a single support request is left out for a different reason: reading it needs the
-id of a request that exists, and no request can be created in the first place.
-
-This is a limit of the platform, not of the collection: today no hackathon can change state at
-all.
+**The evaluation of the submissions and the proclamation of the winner**, which belong to
+features not implemented yet. When they arrive, the collection will move the clock past the end
+date as well, to take the hackathon into `EVALUATION`.
 
 ## The database is emptied at every restart
 
