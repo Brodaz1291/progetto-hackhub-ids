@@ -17,11 +17,14 @@ public class SupportRequestService {
 
     private final SupportRequestRepository supportRequestRepository;
     private final RegistrationRepository registrationRepository;
+    private final HackathonLifecycle hackathonLifecycle;
 
     public SupportRequestService(SupportRequestRepository supportRequestRepository,
-                                 RegistrationRepository registrationRepository) {
+                                 RegistrationRepository registrationRepository,
+                                 HackathonLifecycle hackathonLifecycle) {
         this.supportRequestRepository = supportRequestRepository;
         this.registrationRepository = registrationRepository;
+        this.hackathonLifecycle = hackathonLifecycle;
     }
 
     /**
@@ -31,6 +34,7 @@ public class SupportRequestService {
     public SupportRequest sendSupportRequest(Long registrationId, String description) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+        hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
             throw new IllegalArgumentException("Support is available only while the hackathon is running");
         }

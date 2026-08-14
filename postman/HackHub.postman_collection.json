@@ -409,7 +409,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"HackHub Autumn Challenge\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed.\",\n    \"location\": \"Camerino, Polo Informatico\",\n    \"prize\": 5000,\n    \"registrationDeadline\": \"2026-09-01T23:59:00\",\n    \"startDate\": \"2026-09-15T09:00:00\",\n    \"endDate\": \"2026-09-17T18:00:00\",\n    \"maxTeamSize\": 4,\n    \"judgeId\": {{judgeId}},\n    \"mentorIds\": [{{mentorId1}}, {{mentorId2}}]\n}",
+							"raw": "{\n    \"name\": \"HackHub Autumn Challenge\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed.\",\n    \"location\": \"Camerino, Polo Informatico\",\n    \"prize\": 5000,\n    \"registrationDeadline\": \"2026-02-10T23:59:00\",\n    \"startDate\": \"2026-02-15T09:00:00\",\n    \"endDate\": \"2026-02-17T18:00:00\",\n    \"maxTeamSize\": 4,\n    \"judgeId\": {{judgeId}},\n    \"mentorIds\": [{{mentorId1}}, {{mentorId2}}]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -432,7 +432,7 @@
 								}
 							]
 						},
-						"description": "The staff is taken from the ids saved in 00 Setup. The dates respect registrationDeadline <= startDate < endDate, otherwise the creation is rejected."
+						"description": "The staff is taken from the ids saved in 00 Setup. The dates respect registrationDeadline <= startDate < endDate, otherwise the creation is rejected, and they sit a couple of weeks after the instant the clock starts from, so that 09 Clock can walk the event through its phases with short jumps."
 					}
 				},
 				{
@@ -459,7 +459,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"HackHub Autumn Challenge 2026\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed, and the repository must be public.\",\n    \"location\": \"Camerino, Aula Magna\",\n    \"prize\": 6000,\n    \"registrationDeadline\": \"2026-09-05T23:59:00\",\n    \"startDate\": \"2026-09-20T09:00:00\",\n    \"endDate\": \"2026-09-22T18:00:00\",\n    \"maxTeamSize\": 5\n}",
+							"raw": "{\n    \"name\": \"HackHub Autumn Challenge 2026\",\n    \"rules\": \"Teams build a working prototype in 48 hours. Only open source libraries are allowed, and the repository must be public.\",\n    \"location\": \"Camerino, Aula Magna\",\n    \"prize\": 6000,\n    \"registrationDeadline\": \"2026-02-12T23:59:00\",\n    \"startDate\": \"2026-02-16T09:00:00\",\n    \"endDate\": \"2026-02-18T18:00:00\",\n    \"maxTeamSize\": 5\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -477,7 +477,7 @@
 								"{{hackathonId}}"
 							]
 						},
-						"description": "The staff is not editable here: the body carries only the information proper to the hackathon."
+						"description": "The staff is not editable here: the body carries only the information proper to the hackathon. The dates move forward by a couple of days, and from here on it is these that decide the phases: the event starts on 2026-02-16 and ends on 2026-02-18, which is where 09 Clock takes the clock."
 					}
 				}
 			]
@@ -849,7 +849,7 @@
 								"open"
 							]
 						},
-						"description": "Only the hackathons still in their registration phase. The one created in 02 is there, as no request of the collection moves it further."
+						"description": "Only the hackathons still in their registration phase. The one created in 02 is there because the clock has not been moved yet: 09 Clock takes the time past its start date, and from that moment on this list would leave it out."
 					}
 				},
 				{
@@ -919,7 +919,7 @@
 		},
 		{
 			"name": "07 Leave team",
-			"description": "It changes the composition of the team, so every folder that counts on the two members left by 05 Invitations runs before it. member2 walks out and member1, who created the team, stays behind as its only member. Only 08 Registration runs after, and it takes part in the hackathon with member1 alone.",
+			"description": "It changes the composition of the team, so every folder that counts on the two members left by 05 Invitations runs before it. member2 walks out and member1, who created the team, stays behind as its only member. What runs after works on the team as it is left here: 08 Registration takes part in the hackathon with member1 alone, and the submission and the support request that follow come from that same participation.",
 			"item": [
 				{
 					"name": "Leave team",
@@ -961,7 +961,7 @@
 		},
 		{
 			"name": "08 Registration",
-			"description": "Registers the team in the hackathon, and nothing else: it produces the state the next features graft onto, because submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations. The disqualification used to live here and has been moved to 10 Disqualification, at the very end, because it closes the participation of the team.",
+			"description": "Registers the team in the hackathon, and nothing else: it produces the state the next features graft onto, because submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations. The disqualification used to live here and has been moved to 12 Disqualification, at the very end, because it closes the participation of the team.",
 			"item": [
 				{
 					"name": "Register team",
@@ -1003,15 +1003,138 @@
 								}
 							]
 						},
-						"description": "The hackathon is still in REGISTRATION and its registrationDeadline, moved to 2026-09-05 by the update in 02 Hackathon, is compared with the current date: an expired deadline would reject the registration. The team is taking part in nothing else and its size fits maxTeamSize. The response carries the registrationId every later operation of the event refers to."
+						"description": "The hackathon is still in REGISTRATION and its registrationDeadline, moved to 2026-02-12 by the update in 02 Hackathon, is compared with the time of the clock, which still stands at 2026-02-01: an expired deadline would reject the registration. The team is taking part in nothing else and its size fits maxTeamSize. The response carries the registrationId every later operation of the event refers to."
 					}
 				}
 			]
 		},
 		{
-			"name": "09 Submissions",
-			"description": "Reads back the submissions of the hackathon. The upload is missing on purpose: a submission is accepted only while the hackathon is RUNNING, and in the collection the hackathon stays in REGISTRATION, because no endpoint moves the state forward — the transitions follow the dates of the event and the temporal mechanism does not exist yet. The upload request will be added when it does. What is left is the list the judge reads before evaluating, and it comes back empty for the same reason.",
+			"name": "09 Clock",
+			"description": "Moves the time of the platform to the day the hackathon starts. The clock is a development tool, not a use case: the endpoints it holds live under /api/dev and exist only in the dev profile. It runs here because everything before it belongs to a hackathon still open to registrations, and everything after it needs an event under way.",
 			"item": [
+				{
+					"name": "Read clock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							]
+						},
+						"description": "The instant the platform is living in. Right after startup it is the one configured in app.time.fixed, but the value is not asserted: it depends on how many requests have already moved the time, so a run started midway would read something else."
+					}
+				},
+				{
+					"name": "Move clock to the start of the hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the clock is on the day the hackathon starts\", () => pm.expect(pm.response.text()).to.have.string(\"2026-02-16\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock?instant=2026-02-16T10:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							],
+							"query": [
+								{
+									"key": "instant",
+									"value": "2026-02-16T10:00:00"
+								}
+							]
+						},
+						"description": "This is what lets the whole life cycle of a hackathon be walked through in a single run. The phases of an event follow its dates: the hackathon updated in 02 starts on 2026-02-16T09:00, while the clock stands at 2026-02-01, so without this request it would stay in REGISTRATION for the rest of the collection and no submission and no support request could be accepted. The instant chosen is an hour after the start, and the transition is applied the next time a service reads the hackathon."
+					}
+				}
+			]
+		},
+		{
+			"name": "10 Submissions",
+			"description": "The submission of the team, uploaded while the hackathon is under way, and the two ways of reading it back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened.",
+			"item": [
+				{
+					"name": "Upload submission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the submission belongs to Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"the submission is dated with the time of the clock\", () => pm.expect(pm.response.json().submissionDate).to.have.string(\"2026-02-16\"));",
+									"pm.collectionVariables.set(\"submissionId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId}}&title=Byte Runners prototype&description=A working prototype built during the event, with the repository open to the judge.&link=https://github.com/byte-runners/prototype",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "title",
+									"value": "Byte Runners prototype"
+								},
+								{
+									"key": "description",
+									"value": "A working prototype built during the event, with the repository open to the judge."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/byte-runners/prototype"
+								}
+							]
+						},
+						"description": "Uploading and updating are the same operation: sending this request again would replace the data of the submission instead of creating a second one, because a team hands in one elaborate. The submissionDate is not sent by the client, the platform stamps it with its own time: this is why the test expects the day the clock was moved to and not the real one."
+					}
+				},
 				{
 					"name": "List submissions",
 					"event": [
@@ -1022,7 +1145,8 @@
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
 									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-									"pm.test(\"no submission has been uploaded yet\", () => pm.expect(pm.response.json()).to.be.empty);"
+									"pm.test(\"the submission just uploaded is listed\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
+									"pm.test(\"the list holds the submission of Byte Runners\", () => pm.expect(pm.response.json()[0].teamName).to.eql(\"Byte Runners\"));"
 								]
 							}
 						}
@@ -1046,15 +1170,88 @@
 								}
 							]
 						},
-						"description": "The submissions of the disqualified teams are left out by projection: the query behind this list filters them, so they never reach the judge. Here the list is empty because the hackathon never leaves REGISTRATION and no submission can be uploaded."
+						"description": "The submissions of the disqualified teams are left out by projection: the query behind this list filters them, so they never reach the judge. Byte Runners is still in the event here, so its submission is listed; 12 Disqualification runs later and would take it out of this list."
+					}
+				},
+				{
+					"name": "Get submission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is the submission uploaded before\", () => pm.expect(pm.response.json().title).to.eql(\"Byte Runners prototype\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions/{{submissionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions",
+								"{{submissionId}}"
+							]
+						},
+						"description": "The detail of a single submission, read through the id the upload saved. It is the request the judge opens to look at one elaborate: the score and the judgment come back null, as nothing has been evaluated yet."
 					}
 				}
 			]
 		},
 		{
-			"name": "10 Support requests",
-			"description": "Reads back the support requests of the hackathon. The sending is missing on purpose, for the same reason as the upload of a submission: a support request is accepted only while the hackathon is RUNNING, and in the collection the hackathon stays in REGISTRATION, because no endpoint moves the state forward — the transitions follow the dates of the event and the temporal mechanism does not exist yet. The sending request will be added when it does. What is left is the list a mentor reads to decide where to step in, and it comes back empty for the same reason.",
+			"name": "11 Support requests",
+			"description": "The support a team asks for while the event is under way, and the three ways of reading it back: the list a mentor works on, the one the team sees, and the detail of a single request. Like the submissions, this folder works because 09 Clock has moved the time past the start date: support is available only while the hackathon is RUNNING.",
 			"item": [
+				{
+					"name": "Send support request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the request comes from Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+									"pm.collectionVariables.set(\"supportRequestId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests?registrationId={{registrationId}}&description=The deployment of the prototype fails and we cannot work out why.",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "description",
+									"value": "The deployment of the prototype fails and we cannot work out why."
+								}
+							]
+						},
+						"description": "The request is addressed by the registrationId, not by the team: what asks for support is the participation of a team in an event, so the same team taking part in another hackathon would ask through another registration. It is born PENDING and stays so until a mentor schedules the call it asked for."
+					}
+				},
 				{
 					"name": "List pending support requests",
 					"event": [
@@ -1065,7 +1262,8 @@
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
 									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-									"pm.test(\"no support request has been sent yet\", () => pm.expect(pm.response.json()).to.be.empty);"
+									"pm.test(\"the request just sent is waiting for a mentor\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
+									"pm.test(\"the pending request is the one of Byte Runners\", () => pm.expect(pm.response.json()[0].status).to.eql(\"PENDING\"));"
 								]
 							}
 						}
@@ -1090,13 +1288,80 @@
 								}
 							]
 						},
-						"description": "The list a mentor works on holds the requests no one has taken over yet: the ones already handled drop out of it, because a request leaves the pending state when a mentor schedules the call it asked for. Here the list is empty because the hackathon never leaves REGISTRATION and no request can be sent."
+						"description": "The list a mentor works on holds the requests no one has taken over yet: the ones already handled drop out of it, because a request leaves the pending state when a mentor schedules the call it asked for. The request sent above is there, as no mentor has answered it."
+					}
+				},
+				{
+					"name": "List team support requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the team sees the request it sent\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests?registrationId={{registrationId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								}
+							]
+						},
+						"description": "The same requests seen from the other side: this list belongs to the team and holds all of its own, whatever state they are in, while the pending one belongs to the mentors and cuts across the teams of a hackathon."
+					}
+				},
+				{
+					"name": "Get support request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is the request sent before\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"supportRequestId\"))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId}}"
+							]
+						},
+						"description": "The detail of a single request, read through the id the sending saved. The callDateTime comes back null: it is filled in when a mentor schedules the call, which is what takes the request out of the pending state."
 					}
 				}
 			]
 		},
 		{
-			"name": "11 Disqualification",
+			"name": "12 Disqualification",
 			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
@@ -1134,6 +1399,80 @@
 							]
 						},
 						"description": "The disqualification marks the registration, it does not remove it: afterwards the registration is still there, with state DISQUALIFIED and the reason recorded, and so are the submissions and the history of the event. This is why it is a PUT on the registration and not a DELETE of it. The response is empty."
+					}
+				}
+			]
+		},
+		{
+			"name": "13 Clock",
+			"description": "The second half of the life cycle: the time moves past the end date and the hackathon closes its doors to the submissions. Together with 09 Clock this folder covers both temporal transitions of the state diagram — REGISTRATION to RUNNING on the start date, RUNNING to EVALUATION on the end date — which are the only ones no one commands: the last one, towards CONCLUDED, is explicit and belongs to the proclamation of the winner. It runs after the disqualification on purpose: moving the phase earlier would change the one 12 Disqualification works in.",
+			"item": [
+				{
+					"name": "Move clock past the end of the hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the clock is past the day the hackathon ends\", () => pm.expect(pm.response.text()).to.have.string(\"2026-02-18\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock?instant=2026-02-18T19:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							],
+							"query": [
+								{
+									"key": "instant",
+									"value": "2026-02-18T19:00:00"
+								}
+							]
+						},
+						"description": "An hour after the end date set by the update in 02 Hackathon. From here on the elaborates are frozen: a further upload would be refused, because submissions belong to the event in progress."
+					}
+				},
+				{
+					"name": "Get hackathon in evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon has moved on to the evaluation\", () => pm.expect(pm.response.json().state).to.eql(\"EVALUATION\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							]
+						},
+						"description": "The transition is not the effect of the request above: the clock alone changes nothing, and the phase is brought up to date by the first service that loads the hackathon afterwards. This read is that service, which is why the assertion on the state lives here and not on the PUT."
 					}
 				}
 			]
@@ -1186,6 +1525,14 @@
 		},
 		{
 			"key": "registrationId",
+			"value": ""
+		},
+		{
+			"key": "submissionId",
+			"value": ""
+		},
+		{
+			"key": "supportRequestId",
 			"value": ""
 		}
 	]

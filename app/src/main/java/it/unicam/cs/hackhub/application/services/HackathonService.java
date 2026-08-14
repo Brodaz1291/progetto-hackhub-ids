@@ -27,34 +27,46 @@ public class HackathonService {
     private final ParticipationRepository participationRepository;
     private final NotificationService notificationService;
     private final ObjectProvider<HackathonBuilder> builderProvider;
+    private final HackathonLifecycle hackathonLifecycle;
 
     public HackathonService(HackathonRepository hackathonRepository,
                             UserRepository userRepository,
                             ParticipationRepository participationRepository,
                             NotificationService notificationService,
-                            ObjectProvider<HackathonBuilder> builderProvider) {
+                            ObjectProvider<HackathonBuilder> builderProvider,
+                            HackathonLifecycle hackathonLifecycle) {
         this.hackathonRepository = hackathonRepository;
         this.userRepository = userRepository;
         this.participationRepository = participationRepository;
         this.notificationService = notificationService;
         this.builderProvider = builderProvider;
+        this.hackathonLifecycle = hackathonLifecycle;
     }
 
     public List<Hackathon> getAllHackathons() {
-        return hackathonRepository.findAll();
+        List<Hackathon> hackathons = hackathonRepository.findAll();
+        hackathons.forEach(hackathonLifecycle::refreshState);
+        return hackathons;
     }
 
     /**
      * Returns the hackathons that are still in their registration phase, the only ones a
-     * team can enrol in.
+     * team can enrol in. The query selects the ones the database still records as open, but
+     * the phase is decided by the dates: the ones the refresh has just moved on are left out.
      */
     public List<Hackathon> getOpenHackathons() {
-        return hackathonRepository.findOpenForRegistration();
+        List<Hackathon> hackathons = hackathonRepository.findOpenForRegistration();
+        hackathons.forEach(hackathonLifecycle::refreshState);
+        return hackathons.stream()
+                .filter(hackathon -> hackathon.getState() == HackathonState.REGISTRATION)
+                .toList();
     }
 
     public Hackathon getHackathon(Long hackathonId) {
-        return hackathonRepository.findById(hackathonId)
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
+        return hackathon;
     }
 
     /**
@@ -121,6 +133,7 @@ public class HackathonService {
     public Hackathon updateHackathon(Long hackathonId, UpdateHackathonRequest req) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the data: once registrations are closed the
         // information is settled with the enrolled teams, so validating it is pointless
         if (!checkHackathonInRegistration(hackathon)) {
@@ -170,6 +183,7 @@ public class HackathonService {
     public Mentor addMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (!checkNoActiveParticipation(user)) {
@@ -194,6 +208,7 @@ public class HackathonService {
     public void removeMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         // looking the mentor up inside the staff of this hackathon makes both the type and
@@ -226,6 +241,7 @@ public class HackathonService {
     public Judge replaceJudge(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the user: once the evaluation is under way the
         // replacement is impossible anyway, whoever the candidate is
         if (!checkEvaluationNotStarted(hackathon)) {

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,11 +20,17 @@ public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final RegistrationRepository registrationRepository;
+    private final HackathonLifecycle hackathonLifecycle;
+    private final Clock clock;
 
     public SubmissionService(SubmissionRepository submissionRepository,
-                             RegistrationRepository registrationRepository) {
+                             RegistrationRepository registrationRepository,
+                             HackathonLifecycle hackathonLifecycle,
+                             Clock clock) {
         this.submissionRepository = submissionRepository;
         this.registrationRepository = registrationRepository;
+        this.hackathonLifecycle = hackathonLifecycle;
+        this.clock = clock;
     }
 
     /**
@@ -34,6 +41,7 @@ public class SubmissionService {
     public Submission uploadSubmission(Long registrationId, String title, String description, String link) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+        hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
             throw new IllegalArgumentException("Submissions are accepted only while the hackathon is running");
         }
@@ -46,7 +54,7 @@ public class SubmissionService {
 
         Submission submission = registration.getSubmission();
         if (submission == null) {
-            submission = new Submission(registration, title, description, link, LocalDateTime.now());
+            submission = new Submission(registration, title, description, link, LocalDateTime.now(clock));
             // the registration is managed inside the transaction, so the submission is linked
             // on both sides to keep the in-memory graph coherent for whoever reads it next
             registration.setSubmission(submission);
@@ -81,7 +89,7 @@ public class SubmissionService {
         submission.setTitle(title);
         submission.setDescription(description);
         submission.setLink(link);
-        submission.setSubmissionDate(LocalDateTime.now());
+        submission.setSubmissionDate(LocalDateTime.now(clock));
     }
 
     /**
