@@ -43,7 +43,8 @@ respects this order.
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
 | `09 Submissions` | Reads back the submissions of the hackathon, a list that is still empty (see below) |
-| `10 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
+| `10 Support requests` | Reads back the pending support requests of the hackathon, a list that is still empty (see below) |
+| `11 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -64,7 +65,7 @@ only to make the scenario realistic, not because an earlier date would be refuse
 
 **The disqualification runs last, in a folder of its own.** It is a terminal operation: once
 the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
-the middle of the collection would block everything that comes after it. `10 Disqualification`
+the middle of the collection would block everything that comes after it. `11 Disqualification`
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
 disqualification marks the registration instead of removing it.
 
@@ -77,9 +78,18 @@ implemented yet. A `POST /api/submissions` would therefore be refused every time
 `09 Submissions` only reads the list — which for the same reason comes back empty. The request
 will be added once an event can reach `RUNNING`.
 
+**The sending of a support request is missing too, for the same reason.** Support is available
+only while the hackathon is `RUNNING`, because before it starts there is nothing to ask help
+about and afterwards the event is closed. A `POST /api/support-requests` would therefore be
+refused every time, so the folder `10 Support requests` only reads the pending ones — a list
+that comes back empty because nothing can be sent. This request too will be added once an event
+can reach `RUNNING`.
+
+The detail of a single support request is left out for a different reason: reading it needs the
+id of a request that exists, and no request can be created in the first place.
+
 This is a limit of the platform, not of the collection: today no hackathon can change state at
-all. The same limit will apply to the support requests, which are sent during the event as
-well.
+all.
 
 ## The database is emptied at every restart
 

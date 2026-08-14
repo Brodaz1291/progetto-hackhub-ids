@@ -1052,7 +1052,51 @@
 			]
 		},
 		{
-			"name": "10 Disqualification",
+			"name": "10 Support requests",
+			"description": "Reads back the support requests of the hackathon. The sending is missing on purpose, for the same reason as the upload of a submission: a support request is accepted only while the hackathon is RUNNING, and in the collection the hackathon stays in REGISTRATION, because no endpoint moves the state forward — the transitions follow the dates of the event and the temporal mechanism does not exist yet. The sending request will be added when it does. What is left is the list a mentor reads to decide where to step in, and it comes back empty for the same reason.",
+			"item": [
+				{
+					"name": "List pending support requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+									"pm.test(\"no support request has been sent yet\", () => pm.expect(pm.response.json()).to.be.empty);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/pending?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"pending"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The list a mentor works on holds the requests no one has taken over yet: the ones already handled drop out of it, because a request leaves the pending state when a mentor schedules the call it asked for. Here the list is empty because the hackathon never leaves REGISTRATION and no request can be sent."
+					}
+				}
+			]
+		},
+		{
+			"name": "11 Disqualification",
 			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
