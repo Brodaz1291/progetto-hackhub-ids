@@ -133,6 +133,7 @@ public class HackathonService {
     public Hackathon updateHackathon(Long hackathonId, UpdateHackathonRequest req) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the data: once registrations are closed the
         // information is settled with the enrolled teams, so validating it is pointless
         if (!checkHackathonInRegistration(hackathon)) {
@@ -182,6 +183,7 @@ public class HackathonService {
     public Mentor addMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (!checkNoActiveParticipation(user)) {
@@ -206,6 +208,7 @@ public class HackathonService {
     public void removeMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         // looking the mentor up inside the staff of this hackathon makes both the type and
@@ -238,6 +241,7 @@ public class HackathonService {
     public Judge replaceJudge(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the user: once the evaluation is under way the
         // replacement is impossible anyway, whoever the candidate is
         if (!checkEvaluationNotStarted(hackathon)) {
