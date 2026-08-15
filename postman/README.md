@@ -45,8 +45,9 @@ respects this order.
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
 | `10 Submissions` | Uploads the submission of the team, then reads it back from the list the judge sees and one by one through its id |
 | `11 Support requests` | Sends a support request, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
-| `12 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
-| `13 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
+| `12 Reports` | A mentor reports the team to the organizer, who reads the reports of the hackathon back: the whole list and the detail of one of them |
+| `13 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
+| `14 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -70,10 +71,15 @@ ones that decide the phases are those of the update: start on `2026-02-16T09:00`
 
 **The disqualification runs last, in a folder of its own.** It is a terminal operation: once
 the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
-the middle of the collection would block everything that comes after it. `12 Disqualification`
+the middle of the collection would block everything that comes after it. `13 Disqualification`
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
-disqualification marks the registration instead of removing it. Only `13 Clock` runs after, and
+disqualification marks the registration instead of removing it. Only `14 Clock` runs after, and
 it touches the hackathon rather than the team.
+
+**The reports come before the disqualification.** `12 Reports` is what the organizer decides
+upon, so the sanction reads naturally as its consequence. It also has to run while the team is
+still participating: a report is accepted only while the hackathon is `RUNNING`, and the
+disqualification would leave the team out of the event.
 
 ## How time works in the collection
 
@@ -92,13 +98,13 @@ where it needs to. With `mode=system` it would follow the real time instead, and
 **Why the collection needs to move the time.** The phases of a hackathon are not commanded by
 anyone: an event passes from `REGISTRATION` to `RUNNING` when its start date arrives, and from
 `RUNNING` to `EVALUATION` when its end date does. A submission is accepted only while the event
-is `RUNNING`, and so is a support request. Without moving the clock the hackathon of the
-collection would stay open to registrations forever, and both `10 Submissions` and
-`11 Support requests` would be refused every time.
+is `RUNNING`, and so are a support request and a report. Without moving the clock the hackathon
+of the collection would stay open to registrations forever, and `10 Submissions`,
+`11 Support requests` and `12 Reports` would be refused every time.
 
 `09 Clock` therefore takes the time to `2026-02-16T10:00`, an hour after the start date set by
-the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the two folders that
-follow work. `13 Clock` closes the sequence at the other end, moving the time to
+the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the three folders
+that follow work. `14 Clock` closes the sequence at the other end, moving the time to
 `2026-02-18T19:00`, past the end date: the hackathon reaches `EVALUATION` and the elaborates are
 frozen. The two folders together cover both the transitions that happen on their own — the
 third one, towards `CONCLUDED`, is explicit and belongs to the proclamation of the winner.
@@ -106,7 +112,7 @@ third one, towards `CONCLUDED`, is explicit and belongs to the proclamation of t
 **The transitions happen while reading.** There is no scheduler: every service that loads a
 hackathon brings its phase up to date first. So the passage to `RUNNING` is not the effect of
 the `PUT` on the clock, but of the first request that reads the hackathon afterwards — which is
-why in `13 Clock` the assertion on the state sits on the `GET` and not on the `PUT` that moves
+why in `14 Clock` the assertion on the state sits on the `GET` and not on the `PUT` that moves
 the time. This is also why the submission uploaded by `10 Submissions` is dated `2026-02-16`:
 the platform stamps it with the time of its clock, not with the real one.
 
