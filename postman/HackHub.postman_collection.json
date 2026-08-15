@@ -1208,7 +1208,7 @@
 		},
 		{
 			"name": "11 Support requests",
-			"description": "The support a team asks for while the event is under way, and the three ways of reading it back: the list a mentor works on, the one the team sees, and the detail of a single request. Like the submissions, this folder works because 09 Clock has moved the time past the start date: support is available only while the hackathon is RUNNING.",
+			"description": "The support a team asks for while the event is under way, the call a mentor plans in answer to it, and the three ways of reading a request back: the list a mentor works on, the one the team sees, and the detail of a single request. The call sits before the readings on purpose, so that the lists show a request already taken over instead of one still waiting. Like the submissions, this folder works because 09 Clock has moved the time past the start date: support is available only while the hackathon is RUNNING, and the slot of a call has to lie ahead of the clock.",
 			"item": [
 				{
 					"name": "Send support request",
@@ -1253,6 +1253,49 @@
 					}
 				},
 				{
+					"name": "Schedule a call",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"a mentor has taken the request over\", () => pm.expect(pm.response.json().status).to.eql(\"HANDLED\"));",
+									"pm.test(\"the request carries the slot just booked\", () => pm.expect(pm.response.json().callDateTime).to.be.a(\"string\").that.includes(\"2026-02-16T15:00\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId}}/call?mentorId={{mentorId1}}&dateTime=2026-02-16T15:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-16T15:00:00"
+								}
+							]
+						},
+						"description": "The call is planned under the request it answers, because that is where it belongs: a mentor does not open an appointment out of nothing, they take over a team that asked for help. The mentorId is the id of the user who mentors the event, the one the login saved, and the platform looks for it inside the staff of the hackathon: a mentor of another event cannot answer this request. The slot is five hours ahead of the clock that 09 Clock left at 10:00, because a call is planned, not held in the past. The instant belongs to this request alone: the calendar is a stub that refuses the same slot for the same people twice, so no other request of the collection may book it again. What comes back is the request, not the call: the callDateTime it now carries is the appointment, and the HANDLED status is the request leaving the hands of the mentors."
+					}
+				},
+				{
 					"name": "List pending support requests",
 					"event": [
 						{
@@ -1262,8 +1305,7 @@
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
 									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-									"pm.test(\"the request just sent is waiting for a mentor\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
-									"pm.test(\"the pending request is the one of Byte Runners\", () => pm.expect(pm.response.json()[0].status).to.eql(\"PENDING\"));"
+									"pm.test(\"nothing is waiting for a mentor any more\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.empty);"
 								]
 							}
 						}
@@ -1288,7 +1330,7 @@
 								}
 							]
 						},
-						"description": "The list a mentor works on holds the requests no one has taken over yet: the ones already handled drop out of it, because a request leaves the pending state when a mentor schedules the call it asked for. The request sent above is there, as no mentor has answered it."
+						"description": "The list a mentor works on holds the requests no one has taken over yet, and it comes back empty: the hackathon has one request only, and the call scheduled above is exactly what takes a request out of the pending state. Run before that call, this same request would have found it waiting."
 					}
 				},
 				{
@@ -1300,7 +1342,8 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"the team sees the request it sent\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);"
+									"pm.test(\"the team sees the request it sent\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
+									"pm.test(\"the request it sent has been handled\", () => pm.expect(pm.response.json()[0].status).to.eql(\"HANDLED\"));"
 								]
 							}
 						}
@@ -1324,7 +1367,7 @@
 								}
 							]
 						},
-						"description": "The same requests seen from the other side: this list belongs to the team and holds all of its own, whatever state they are in, while the pending one belongs to the mentors and cuts across the teams of a hackathon."
+						"description": "The same requests seen from the other side: this list belongs to the team and holds all of its own, whatever state they are in, while the pending one belongs to the mentors and cuts across the teams of a hackathon. The difference is visible right here: the request the mentors no longer see is still in this list, handled."
 					}
 				},
 				{
@@ -1336,7 +1379,8 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"it is the request sent before\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"supportRequestId\"))));"
+									"pm.test(\"it is the request sent before\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"supportRequestId\"))));",
+									"pm.test(\"the appointment with the mentor is on it\", () => pm.expect(pm.response.json().callDateTime).to.include(\"2026-02-16T15:00\"));"
 								]
 							}
 						}
@@ -1355,7 +1399,7 @@
 								"{{supportRequestId}}"
 							]
 						},
-						"description": "The detail of a single request, read through the id the sending saved. The callDateTime comes back null: it is filled in when a mentor schedules the call, which is what takes the request out of the pending state."
+						"description": "The detail of a single request, read through the id the sending saved. The callDateTime is filled in by now: the call scheduled above is what put it there, and finding it again in a later request shows that the appointment was written to the database, not only returned by the answer that created it."
 					}
 				}
 			]

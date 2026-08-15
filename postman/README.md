@@ -44,7 +44,7 @@ respects this order.
 | `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
 | `10 Submissions` | Uploads the submission of the team, then reads it back from the list the judge sees and one by one through its id |
-| `11 Support requests` | Sends a support request, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
+| `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
 | `12 Reports` | A mentor reports the team to the organizer, who reads the reports of the hackathon back: the whole list and the detail of one of them |
 | `13 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
 | `14 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
@@ -76,6 +76,14 @@ still works on the `registrationId` saved by `08 Registration`, which stays vali
 disqualification marks the registration instead of removing it. Only `14 Clock` runs after, and
 it touches the hackathon rather than the team.
 
+**The calendar keeps its agenda in memory, so no instant may be booked twice.** The slot of the
+call in `11 Support requests` is reserved on an external calendar the platform reaches through
+an adapter, and in this project that calendar is simulated: it remembers the slots it has
+already given out and refuses a second event on the same people at the same instant, as a real
+one would. The call therefore books `2026-02-16T15:00` and no other request may reuse it — a
+folder added later needs an instant of its own, or the booking comes back refused. The agenda
+lives as long as the application does, so it is emptied by the same restart the database needs.
+
 **The reports come before the disqualification.** `12 Reports` is what the organizer decides
 upon, so the sanction reads naturally as its consequence. It also has to run while the team is
 still participating: a report is accepted only while the hackathon is `RUNNING`, and the
@@ -98,9 +106,9 @@ where it needs to. With `mode=system` it would follow the real time instead, and
 **Why the collection needs to move the time.** The phases of a hackathon are not commanded by
 anyone: an event passes from `REGISTRATION` to `RUNNING` when its start date arrives, and from
 `RUNNING` to `EVALUATION` when its end date does. A submission is accepted only while the event
-is `RUNNING`, and so are a support request and a report. Without moving the clock the hackathon
-of the collection would stay open to registrations forever, and `10 Submissions`,
-`11 Support requests` and `12 Reports` would be refused every time.
+is `RUNNING`, and so are a support request, the call that answers it and a report. Without
+moving the clock the hackathon of the collection would stay open to registrations forever, and
+`10 Submissions`, `11 Support requests` and `12 Reports` would be refused every time.
 
 `09 Clock` therefore takes the time to `2026-02-16T10:00`, an hour after the start date set by
 the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the three folders
