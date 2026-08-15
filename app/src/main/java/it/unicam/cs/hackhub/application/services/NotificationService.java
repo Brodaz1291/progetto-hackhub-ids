@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
+import it.unicam.cs.hackhub.model.entities.Organizer;
 import it.unicam.cs.hackhub.model.entities.Team;
 import it.unicam.cs.hackhub.model.entities.User;
 import org.slf4j.Logger;
@@ -56,5 +57,10 @@ public class NotificationService {
     public void notifyTeam(Team team) {
         log.info("NotificationService: notified team {} of the change to their registration",
                 team.getName());
+    }
+
+    public void notifyOrganizer(Organizer organizer) {
+        log.info("NotificationService: notified organizer {} of the report received",
+                organizer.getUser().getUsername());
     }
 }
