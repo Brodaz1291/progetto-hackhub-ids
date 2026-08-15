@@ -1361,7 +1361,123 @@
 			]
 		},
 		{
-			"name": "12 Disqualification",
+			"name": "12 Reports",
+			"description": "A mentor reports to the organizer a team that violated the rules, and the organizer reads the reports of the hackathon back: the whole list and the detail of a single one. The folder sits between 09 Clock and 13 Clock like the submissions and the support requests, because a report is about behaviour held during the event and is accepted only while the hackathon is RUNNING. It comes before the disqualification on purpose: the report is what the organizer decides upon, so it makes sense that the sanction follows it.",
+			"item": [
+				{
+					"name": "Report a team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the report is about Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"the reason is the one sent\", () => pm.expect(pm.response.json().reason).to.eql(\"The team used code written by someone outside the hackathon.\"));",
+									"pm.collectionVariables.set(\"reportId\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports?registrationId={{registrationId}}&reason=The team used code written by someone outside the hackathon.",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "reason",
+									"value": "The team used code written by someone outside the hackathon."
+								}
+							]
+						},
+						"description": "The report does not say who sent it: no parameter identifies the mentor, and the response carries no author. A report is a fact about the team, and the organizer decides on the merit of the violation rather than on who noticed it. The team is addressed by its registrationId, like the support request: what is reported is the participation of a team in an event."
+					}
+				},
+				{
+					"name": "List reports",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the report just sent is there\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The list the organizer consults, which gathers the reports of the whole hackathon whichever team they are about. An unknown hackathonId comes back as an empty list rather than as an error: the list of a hackathon that collected nothing and the list of one that does not exist look the same from here."
+					}
+				},
+				{
+					"name": "Get report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is the report sent before\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"reportId\"))));",
+									"pm.test(\"the reason is the one sent\", () => pm.expect(pm.response.json().reason).to.eql(\"The team used code written by someone outside the hackathon.\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}"
+							]
+						},
+						"description": "The detail of a single report, read through the id the sending saved. The date comes back as 2026-02-16, the day the clock is living in: the platform stamps the report with the time of its own clock, like the submission of 10 Submissions."
+					}
+				}
+			]
+		},
+		{
+			"name": "13 Disqualification",
 			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
@@ -1404,7 +1520,7 @@
 			]
 		},
 		{
-			"name": "13 Clock",
+			"name": "14 Clock",
 			"description": "The second half of the life cycle: the time moves past the end date and the hackathon closes its doors to the submissions. Together with 09 Clock this folder covers both temporal transitions of the state diagram — REGISTRATION to RUNNING on the start date, RUNNING to EVALUATION on the end date — which are the only ones no one commands: the last one, towards CONCLUDED, is explicit and belongs to the proclamation of the winner. It runs after the disqualification on purpose: moving the phase earlier would change the one 12 Disqualification works in.",
 			"item": [
 				{
@@ -1533,6 +1649,10 @@
 		},
 		{
 			"key": "supportRequestId",
+			"value": ""
+		},
+		{
+			"key": "reportId",
 			"value": ""
 		}
 	]
