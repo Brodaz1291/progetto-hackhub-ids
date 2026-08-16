@@ -961,7 +961,7 @@
 		},
 		{
 			"name": "08 Registration",
-			"description": "Registers the team in the hackathon, and nothing else: it produces the state the next features graft onto, because submissions, support requests and reports are all addressed by the registrationId this folder saves. The team taking part is Byte Runners with member1 alone, the only member left after 07 Leave team, and the hackathon is still open to registrations. The disqualification used to live here and has been moved to 12 Disqualification, at the very end, because it closes the participation of the team.",
+			"description": "Registers in the hackathon the two teams the event runs on: Byte Runners, with member1 alone as the only member left after 07 Leave team, and Null Pointers, created here by member2. Two participants are needed because 13 Disqualification takes one of them out: with a single team the list of submissions read in 15 Evaluation would come back empty, and an empty list does not tell a filter that works from a hackathon with nothing left in it. The registrationId of Byte Runners is the one submissions, support requests and reports are addressed by, while the second registration is kept apart in registrationId2. The hackathon is still open to registrations. The disqualification used to live here and has been moved to 13 Disqualification, at the very end, because it closes the participation of the team.",
 			"item": [
 				{
 					"name": "Register team",
@@ -1004,6 +1004,99 @@
 							]
 						},
 						"description": "The hackathon is still in REGISTRATION and its registrationDeadline, moved to 2026-02-12 by the update in 02 Hackathon, is compared with the time of the clock, which still stands at 2026-02-01: an expired deadline would reject the registration. The team is taking part in nothing else and its size fits maxTeamSize. The response carries the registrationId every later operation of the event refers to."
+					}
+				},
+				{
+					"name": "Create the second team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member2\"));",
+									"pm.collectionVariables.set(\"teamId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Null Pointers\",\n    \"iban\": \"IT60X0542811101000000987654\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teams?creatorId={{memberId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams"
+							],
+							"query": [
+								{
+									"key": "creatorId",
+									"value": "{{memberId2}}"
+								}
+							]
+						},
+						"description": "The second team is created here and not in 03 Team because member2 is free only after 07 Leave team: while still inside Byte Runners the same user could not create anything. One member is enough to register, the size of the team is only compared with maxTeamSize."
+					}
+				},
+				{
+					"name": "Register the second team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the team registered is Null Pointers\", () => pm.expect(pm.response.json().teamName).to.eql(\"Null Pointers\"));",
+									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
+									"pm.collectionVariables.set(\"registrationId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations?hackathonId={{hackathonId}}&teamId={{teamId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "teamId",
+									"value": "{{teamId2}}"
+								}
+							]
+						},
+						"description": "The second team takes part under the same conditions as the first one, with the clock still at 2026-02-01 and the deadline at 2026-02-12. This is the registration that survives the disqualification of Byte Runners and reaches the evaluation."
 					}
 				}
 			]
@@ -1083,7 +1176,7 @@
 		},
 		{
 			"name": "10 Submissions",
-			"description": "The submission of the team, uploaded while the hackathon is under way, and the two ways of reading it back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened.",
+			"description": "The submissions of the two teams, uploaded while the hackathon is under way, and the two ways of reading them back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened. Both teams hand in their elaborate while both are still in the event, so the list at the end of the folder holds two of them.",
 			"item": [
 				{
 					"name": "Upload submission",
@@ -1136,6 +1229,56 @@
 					}
 				},
 				{
+					"name": "Upload the second submission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the submission belongs to Null Pointers\", () => pm.expect(pm.response.json().teamName).to.eql(\"Null Pointers\"));",
+									"pm.test(\"the submission is not evaluated yet\", () => pm.expect(pm.response.json().score).to.be.null);",
+									"pm.collectionVariables.set(\"submissionId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId2}}&title=Null Pointers prototype&description=A prototype built during the event, with the repository open to the judge.&link=https://github.com/null-pointers/prototype",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId2}}"
+								},
+								{
+									"key": "title",
+									"value": "Null Pointers prototype"
+								},
+								{
+									"key": "description",
+									"value": "A prototype built during the event, with the repository open to the judge."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/null-pointers/prototype"
+								}
+							]
+						},
+						"description": "The elaborate of the team that is not disqualified later on: it is the submission the judge evaluates in 15 Evaluation. Same request as the one above with the other registration, so the id it saves is kept apart in submissionId2."
+					}
+				},
+				{
 					"name": "List submissions",
 					"event": [
 						{
@@ -1145,8 +1288,11 @@
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
 									"pm.test(\"the response is a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-									"pm.test(\"the submission just uploaded is listed\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
-									"pm.test(\"the list holds the submission of Byte Runners\", () => pm.expect(pm.response.json()[0].teamName).to.eql(\"Byte Runners\"));"
+									"pm.test(\"both the submissions are listed\", () => pm.expect(pm.response.json()).to.have.lengthOf(2));",
+									"pm.test(\"the list holds the submission of each team\", () => {",
+									"    const teamNames = pm.response.json().map((submission) => submission.teamName);",
+									"    pm.expect(teamNames).to.have.members([\"Byte Runners\", \"Null Pointers\"]);",
+									"});"
 								]
 							}
 						}
@@ -1170,7 +1316,7 @@
 								}
 							]
 						},
-						"description": "The submissions of the disqualified teams are left out by projection: the query behind this list filters them, so they never reach the judge. Byte Runners is still in the event here, so its submission is listed; 12 Disqualification runs later and would take it out of this list."
+						"description": "Both teams are still in the event here, so both the submissions are listed: this is the state the projection is measured against. The submissions of the disqualified teams are left out by the query behind this list, so they never reach the judge; 13 Disqualification runs later, and the very same request repeated in 15 Evaluation comes back with one submission alone."
 					}
 				},
 				{
@@ -1565,7 +1711,7 @@
 		},
 		{
 			"name": "14 Clock",
-			"description": "The second half of the life cycle: the time moves past the end date and the hackathon closes its doors to the submissions. Together with 09 Clock this folder covers both temporal transitions of the state diagram — REGISTRATION to RUNNING on the start date, RUNNING to EVALUATION on the end date — which are the only ones no one commands: the last one, towards CONCLUDED, is explicit and belongs to the proclamation of the winner. It runs after the disqualification on purpose: moving the phase earlier would change the one 12 Disqualification works in.",
+			"description": "The second half of the life cycle: the time moves past the end date and the hackathon closes its doors to the submissions. Together with 09 Clock this folder covers both temporal transitions of the state diagram — REGISTRATION to RUNNING on the start date, RUNNING to EVALUATION on the end date — which are the only ones no one commands: the last one, towards CONCLUDED, is explicit and belongs to the proclamation of the winner. It runs after the disqualification on purpose: moving the phase earlier would change the one 13 Disqualification works in.",
 			"item": [
 				{
 					"name": "Move clock past the end of the hackathon",
@@ -1636,6 +1782,140 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "15 Evaluation",
+			"description": "The judge expresses himself on the submissions, in the phase the clock reached in 14 Clock. The folder opens by reading the list again, to show what the disqualification changed, then evaluates the elaborate still in the running and evaluates it a second time: a score is not terminal, the judge can go back on it while the hackathon is being judged, exactly as a team could hand in its elaborate again while the event was running.",
+			"item": [
+				{
+					"name": "List the submissions to evaluate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"one submission alone is left\", () => pm.expect(pm.response.json()).to.have.lengthOf(1));",
+									"pm.test(\"it is the submission of the team still in the event\", () => pm.expect(pm.response.json()[0].teamName).to.eql(\"Null Pointers\"));",
+									"pm.test(\"the submission of the disqualified team is left out\", () => {",
+									"    const teamNames = pm.response.json().map((submission) => submission.teamName);",
+									"    pm.expect(teamNames).to.not.include(\"Byte Runners\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The same request as in 10 Submissions, run after 13 Disqualification: there it returned two submissions, here one. The elaborate of Byte Runners is still in the database and its registration still holds the history of the event, but the query leaves it out. This is the exclusion by projection: the judge does not choose to skip that submission, he never sees it."
+					}
+				},
+				{
+					"name": "Evaluate the submission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is the submission that was evaluated\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"submissionId2\"))));",
+									"pm.test(\"the score is recorded\", () => pm.expect(pm.response.json().score).to.eql(8));",
+									"pm.test(\"the judgment is recorded\", () => pm.expect(pm.response.json().judgment).to.eql(\"A working prototype, clean code and a repository anyone can build.\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions/{{submissionId2}}/evaluation?score=8&judgment=A working prototype, clean code and a repository anyone can build.",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions",
+								"{{submissionId2}}",
+								"evaluation"
+							],
+							"query": [
+								{
+									"key": "score",
+									"value": "8"
+								},
+								{
+									"key": "judgment",
+									"value": "A working prototype, clean code and a repository anyone can build."
+								}
+							]
+						},
+						"description": "The judge records a score between 0 and 10 and a short judgment. What comes back is the submission and not the evaluation: its projection already carries score and judgment, which came back null when the same submission was read in 10 Submissions."
+					}
+				},
+				{
+					"name": "Evaluate the submission again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the score has been replaced\", () => pm.expect(pm.response.json().score).to.eql(9));",
+									"pm.test(\"the judgment has been replaced\", () => pm.expect(pm.response.json().judgment).to.eql(\"Reviewed after a closer look at the repository: the tests raise the score.\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions/{{submissionId2}}/evaluation?score=9&judgment=Reviewed after a closer look at the repository: the tests raise the score.",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions",
+								"{{submissionId2}}",
+								"evaluation"
+							],
+							"query": [
+								{
+									"key": "score",
+									"value": "9"
+								},
+								{
+									"key": "judgment",
+									"value": "Reviewed after a closer look at the repository: the tests raise the score."
+								}
+							]
+						},
+						"description": "Evaluating again replaces the score and the judgment instead of adding a second evaluation: a submission carries one evaluation, and the judge can change his mind while the hackathon is in evaluation. It is the same behaviour as uploading a submission twice in 10 Submissions."
+					}
+				}
+			]
 		}
 	],
 	"variable": [
@@ -1680,6 +1960,10 @@
 			"value": ""
 		},
 		{
+			"key": "teamId2",
+			"value": ""
+		},
+		{
 			"key": "invitationId",
 			"value": ""
 		},
@@ -1688,7 +1972,15 @@
 			"value": ""
 		},
 		{
+			"key": "registrationId2",
+			"value": ""
+		},
+		{
 			"key": "submissionId",
+			"value": ""
+		},
+		{
+			"key": "submissionId2",
 			"value": ""
 		},
 		{

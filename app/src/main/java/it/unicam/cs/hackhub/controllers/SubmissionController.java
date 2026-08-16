@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.controllers;
 
 import it.unicam.cs.hackhub.application.dtos.SubmissionDTO;
 import it.unicam.cs.hackhub.application.mappers.DTOMapper;
+import it.unicam.cs.hackhub.application.services.EvaluationService;
 import it.unicam.cs.hackhub.application.services.SubmissionService;
 import it.unicam.cs.hackhub.model.entities.Submission;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +19,14 @@ import java.util.List;
 public class SubmissionController {
 
     private final SubmissionService submissionService;
+    private final EvaluationService evaluationService;
     private final DTOMapper dtoMapper;
 
-    public SubmissionController(SubmissionService submissionService, DTOMapper dtoMapper) {
+    public SubmissionController(SubmissionService submissionService,
+                                EvaluationService evaluationService,
+                                DTOMapper dtoMapper) {
         this.submissionService = submissionService;
+        this.evaluationService = evaluationService;
         this.dtoMapper = dtoMapper;
     }
 
@@ -50,5 +55,29 @@ public class SubmissionController {
     @GetMapping("/{submissionId}")
     public SubmissionDTO getSubmission(@PathVariable Long submissionId) {
         return dtoMapper.toDTO(submissionService.getSubmission(submissionId));
+    }
+
+    /**
+     * Records the score and the judgment a judge expresses on a submission.
+     *
+     * NOTE: the submission is returned instead of the evaluation because its projection
+     * already carries score and judgment, so the client reads the elaborate back with the
+     * verdict attached.
+     *
+     * It is read again because the association goes from the submission to its evaluation
+     * only, and that is on purpose: an evaluation makes no sense detached from the elaborate
+     * it judges, which is the one owning it. Where the two ends are both navigable, as
+     * between a support request and its call, it is because someone really starts from one to
+     * reach the other: the team consulting a request has to see whether an appointment
+     * answers it. Nobody starts from an evaluation looking for its submission, so the second
+     * reading is the price of keeping the association pointing the only way it is travelled.
+     */
+    @PostMapping("/{submissionId}/evaluation")
+    public SubmissionDTO evaluateSubmission(@PathVariable Long submissionId,
+                                            @RequestParam int score,
+                                            @RequestParam String judgment) {
+        evaluationService.evaluateSubmission(submissionId, score, judgment);
+        Submission evaluated = submissionService.getSubmission(submissionId);
+        return dtoMapper.toDTO(evaluated);
     }
 }
