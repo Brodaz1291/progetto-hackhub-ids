@@ -114,4 +114,19 @@ public class HackathonController {
         Judge judge = hackathonService.replaceJudge(hackathonId, username);
         return dtoMapper.toDTO(judge.getUser());
     }
+
+    /**
+     * Proclaims the winning team of a hackathon, which concludes it.
+     *
+     * NOTE: the registration is optional because a hackathon where no submission has been
+     * evaluated is concluded without a winner, and there the client has nobody to name. The
+     * response describes the concluded hackathon since that is the only way to tell the two
+     * outcomes apart: it carries both the state and the name of the winning team.
+     */
+    @PutMapping("/{hackathonId}/winner")
+    public HackathonDTO proclaimWinner(@PathVariable Long hackathonId,
+                                       @RequestParam(required = false) Long registrationId) {
+        Hackathon concludedHackathon = hackathonService.proclaimWinner(hackathonId, registrationId);
+        return dtoMapper.toDTO(concludedHackathon);
+    }
 }
