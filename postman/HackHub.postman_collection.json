@@ -1916,6 +1916,83 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "16 Proclamation",
+			"description": "The third transition of the state diagram, and the only one somebody commands: the organizer proclaims the winner and the hackathon reaches CONCLUDED. Registering the winner and concluding the event are a single act, because a concluded hackathon with nobody proclaimed is a state the model admits only when there is nothing to choose from. The team proclaimed is Null Pointers, which 13 Disqualification left as the only one in the running and 15 Evaluation as the only one with a score. The folder closes the collection because the phase it reaches is terminal: from here on nothing is modifiable any more, neither a disqualification nor a second evaluation would be accepted.",
+			"item": [
+				{
+					"name": "Proclaim the winner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon is concluded\", () => pm.expect(pm.response.json().state).to.eql(\"CONCLUDED\"));",
+									"pm.test(\"the winner is Null Pointers\", () => pm.expect(pm.response.json().winnerTeamName).to.eql(\"Null Pointers\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}/winner?registrationId={{registrationId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}",
+								"winner"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId2}}"
+								}
+							]
+						},
+						"description": "The registration proclaimed is the one of Null Pointers, saved by 08 Registration: the winner is looked for among the evaluated submissions, so the registration of Byte Runners would be refused here even though it exists and carries a submission of its own. The two assertions on the response say together what a single request has done: the winning team is recorded and the hackathon is concluded. It is a PUT because it changes the state of a hackathon that is already there, as the disqualification does on a registration. The registrationId is a query parameter and not a body because it names something already existing, and it may be left out only by a hackathon where no submission has been evaluated, which is concluded with no winner at all."
+					}
+				},
+				{
+					"name": "Get the concluded hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the concluded phase holds on reading\", () => pm.expect(pm.response.json().state).to.eql(\"CONCLUDED\"));",
+									"pm.test(\"the winner is recorded on the hackathon\", () => pm.expect(pm.response.json().winnerTeamName).to.eql(\"Null Pointers\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							]
+						},
+						"description": "The same read as in 14 Clock, with the clock still standing past every date of the event. Every service that loads a hackathon brings its phase up to date first, so this request runs again the refresh that took the event to RUNNING and then to EVALUATION: here it changes nothing, because the phases only move forward and the concluded one is where they stop. The name of the winning team comes back from the association written by the request above, which is what tells a recorded winner from one that only travelled in a response."
+					}
+				}
+			]
 		}
 	],
 	"variable": [

@@ -7,10 +7,13 @@ import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import it.unicam.cs.hackhub.model.entities.Organizer;
+import it.unicam.cs.hackhub.model.entities.Registration;
+import it.unicam.cs.hackhub.model.entities.Submission;
 import it.unicam.cs.hackhub.model.entities.User;
 import it.unicam.cs.hackhub.model.enums.HackathonState;
 import it.unicam.cs.hackhub.model.repositories.HackathonRepository;
 import it.unicam.cs.hackhub.model.repositories.ParticipationRepository;
+import it.unicam.cs.hackhub.model.repositories.SubmissionRepository;
 import it.unicam.cs.hackhub.model.repositories.UserRepository;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class HackathonService {
     private final HackathonRepository hackathonRepository;
     private final UserRepository userRepository;
     private final ParticipationRepository participationRepository;
+    private final SubmissionRepository submissionRepository;
     private final NotificationService notificationService;
     private final ObjectProvider<HackathonBuilder> builderProvider;
     private final HackathonLifecycle hackathonLifecycle;
@@ -32,12 +36,14 @@ public class HackathonService {
     public HackathonService(HackathonRepository hackathonRepository,
                             UserRepository userRepository,
                             ParticipationRepository participationRepository,
+                            SubmissionRepository submissionRepository,
                             NotificationService notificationService,
                             ObjectProvider<HackathonBuilder> builderProvider,
                             HackathonLifecycle hackathonLifecycle) {
         this.hackathonRepository = hackathonRepository;
         this.userRepository = userRepository;
         this.participationRepository = participationRepository;
+        this.submissionRepository = submissionRepository;
         this.notificationService = notificationService;
         this.builderProvider = builderProvider;
         this.hackathonLifecycle = hackathonLifecycle;
@@ -298,5 +304,89 @@ public class HackathonService {
                 .filter(Mentor.class::isInstance)
                 .count();
         return mentorCount > 1;
+    }
+
+    /**
+     * Proclaims the winning team of a hackathon and notifies it. Registering the winner and
+     * concluding the event are a single act: a concluded hackathon with nobody proclaimed is a
+     * state the model does not admit, except when there is nothing to choose from.
+     *
+     * The winner is looked up among the evaluated submissions rather than by identifier alone:
+     * finding it there is what makes it certain that the registration belongs to this
+     * hackathon, that the team was not disqualified, that it handed in and that it was judged.
+     */
+    @Transactional
+    public Hackathon proclaimWinner(Long hackathonId, Long registrationId) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        hackathonLifecycle.refreshState(hackathon);
+        if (!checkHackathonInEvaluation(hackathon)) {
+            throw new IllegalArgumentException("The winner can be proclaimed only during the evaluation phase");
+        }
+        if (!checkAllSubmissionsEvaluated(hackathon)) {
+            throw new IllegalArgumentException("The winner can be proclaimed only once every submission has been evaluated");
+        }
+        if (!checkHasEvaluatedSubmissions(hackathon)) {
+            applyConclusion(hackathon, null);
+            return hackathonRepository.save(hackathon);
+        }
+        if (registrationId == null) {
+            throw new IllegalArgumentException(
+                    "Hackathon " + hackathonId + " has evaluated submissions: the winner has to be selected");
+        }
+
+        Registration winner = submissionRepository.findEvaluatedByHackathonId(hackathonId).stream()
+                .map(Submission::getRegistration)
+                .filter(registration -> registration.getId().equals(registrationId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Registration " + registrationId
+                        + " is not among the evaluated submissions of hackathon " + hackathonId));
+        applyConclusion(hackathon, winner);
+        Hackathon concludedHackathon = hackathonRepository.save(hackathon);
+
+        notificationService.notifyTeam(winner.getTeam());
+        return concludedHackathon;
+    }
+
+    /**
+     * The proclamation closes the evaluation phase: before it the scores are not all in, after
+     * it the hackathon is concluded and its result is settled. Since the concluded phase is
+     * terminal, this is also what makes a second proclamation impossible.
+     */
+    private boolean checkHackathonInEvaluation(Hackathon hackathon) {
+        return hackathon.getState() == HackathonState.EVALUATION;
+    }
+
+    /**
+     * The winner is chosen against complete information: as long as one submission is left
+     * without a score the comparison between the teams is not settled. The submissions of the
+     * disqualified teams are left out, since nobody is going to evaluate them.
+     *
+     * With no submission to consider the check is vacuously true, and this is what makes the
+     * two checks fit together: the hackathon where everyone was disqualified or nobody handed
+     * in passes here and is caught by checkHasEvaluatedSubmissions, which concludes it without
+     * a winner instead of blocking it.
+     */
+    private boolean checkAllSubmissionsEvaluated(Hackathon hackathon) {
+        return submissionRepository.findByHackathonIdNotDisqualified(hackathon.getId()).stream()
+                .allMatch(submission -> submission.getEvaluation() != null);
+    }
+
+    /**
+     * Distinguishes the two outcomes of the proclamation: a winner chosen among the evaluated
+     * submissions, or the bare conclusion of an event where there is none to choose.
+     */
+    private boolean checkHasEvaluatedSubmissions(Hackathon hackathon) {
+        return !submissionRepository.findEvaluatedByHackathonId(hackathon.getId()).isEmpty();
+    }
+
+    /**
+     * Winner and conclusion are written together because they are the same act, and there is
+     * no operation that concludes a hackathon on its own. The winner is null when no submission
+     * has been evaluated: the only case in which the event closes with nobody proclaimed.
+     */
+    private void applyConclusion(Hackathon hackathon, Registration winner) {
+        hackathon.setWinner(winner);
+        hackathon.setState(HackathonState.CONCLUDED);
     }
 }
