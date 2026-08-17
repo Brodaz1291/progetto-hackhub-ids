@@ -125,6 +125,9 @@ public class SubmissionService {
      * The role covered makes no difference: organizer, judge and mentor all consult the
      * elaborates of their own event. What is decisive is the membership, so it is enough to
      * find the user among the staff participations of this hackathon.
+     *
+     * The staff is read outside a transaction because HackathonRepository.findById fetches it
+     * together with the hackathon: removing that join fetch breaks this check.
      */
     private boolean checkStaffAssigned(User user, Hackathon hackathon) {
         for (StaffParticipation staffParticipation : hackathon.getStaff()) {
