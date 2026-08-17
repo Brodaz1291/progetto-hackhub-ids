@@ -45,9 +45,14 @@ public class SubmissionController {
         return dtoMapper.toDTO(submission);
     }
 
+    /**
+     * The identity of who is reading travels as a parameter because the access to the
+     * elaborates is granted to the staff of that hackathon only.
+     */
     @GetMapping
-    public List<SubmissionDTO> getSubmissions(@RequestParam Long hackathonId) {
-        return submissionService.getSubmissions(hackathonId).stream()
+    public List<SubmissionDTO> getSubmissions(@RequestParam Long hackathonId,
+                                              @RequestParam Long userId) {
+        return submissionService.getSubmissions(hackathonId, userId).stream()
                 .map(dtoMapper::toDTO)
                 .toList();
     }

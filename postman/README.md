@@ -37,13 +37,13 @@ respects this order.
 | `01 Auth` | Registers a new user, then logs it in and out |
 | `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, then updates its information |
 | `03 Team` | Creates a team with `member1` as its first member |
-| `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1` |
+| `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1`, moving `judgeId` onto the new judge |
 | `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
-| `10 Submissions` | Uploads the submission of the team, then reads it back from the list the judge sees and one by one through its id |
+| `10 Submissions` | Uploads the submission of the team, then reads it back from the list reserved to the staff of the hackathon and one by one through its id |
 | `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
 | `12 Reports` | A mentor reports the team to the organizer, who reads the reports of the hackathon back: the whole list and the detail of one of them |
 | `13 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
@@ -92,6 +92,13 @@ upon, so the sanction reads naturally as its consequence. It also has to run whi
 still participating: a report is accepted only while the hackathon is `RUNNING`, and the
 disqualification would leave the team out of the event.
 
+**The submissions are read by the organizer, not by the judge.** Reading them is the one
+operation of the platform that depends on who is asking: it is granted to the staff of that
+hackathon, whatever role they cover, so the request has to carry the id of one of them. The
+organizer is the staff member that stays such for the whole collection, while the judge changes
+hands in `04 Staff` and the mentors are two. Passing `{{organizerId}}` therefore keeps the two
+readings in `10 Submissions` and `15 Evaluation` independent of what the staff folder did.
+
 ## How time works in the collection
 
 The platform does not read the clock of the machine. It reads a `Clock` bean configured in
@@ -138,6 +145,12 @@ the whole life cycle of an event in a single run, without waiting for the real d
 **The payment of the prize to the winning team**, which belongs to a feature not implemented
 yet. The collection now leaves the hackathon `CONCLUDED` with its winner recorded, which is the
 state the payment starts from, so it will graft onto the end of it.
+
+**The requests that are meant to be refused.** Every request here is a happy path. The access to
+the submissions is granted to the staff of the hackathon alone, but the attempt of somebody who
+is not staff is not among them: until the errors of the API answer with a status of their own, a
+request like that could only assert a `500`, which says nothing about why it was turned away.
+The error cases are collected in a folder of their own once that is in place.
 
 ## The database is emptied at every restart
 

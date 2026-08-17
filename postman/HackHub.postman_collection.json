@@ -627,7 +627,8 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"member3 is the new judge\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));"
+									"pm.test(\"member3 is the new judge\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));",
+									"pm.collectionVariables.set(\"judgeId\", pm.response.json().id);"
 								]
 							}
 						}
@@ -653,7 +654,7 @@
 								}
 							]
 						},
-						"description": "It runs after the removal on purpose: member3 becomes free again only once the mentor participation is gone, otherwise the replacement would be refused."
+						"description": "It runs after the removal on purpose: member3 becomes free again only once the mentor participation is gone, otherwise the replacement would be refused. The test moves judgeId onto the new judge: from here on judge1 is no longer staff of the hackathon, and a request reading that variable would be turned away."
 					}
 				}
 			]
@@ -1301,7 +1302,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}",
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}&userId={{organizerId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1313,10 +1314,14 @@
 								{
 									"key": "hackathonId",
 									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "userId",
+									"value": "{{organizerId}}"
 								}
 							]
 						},
-						"description": "Both teams are still in the event here, so both the submissions are listed: this is the state the projection is measured against. The submissions of the disqualified teams are left out by the query behind this list, so they never reach the judge; 13 Disqualification runs later, and the very same request repeated in 15 Evaluation comes back with one submission alone."
+						"description": "Both teams are still in the event here, so both the submissions are listed: this is the state the projection is measured against. The organizer reads them as a member of the staff of this hackathon, which is what the access to this list requires. The submissions of the disqualified teams are left out by the query behind this list, so they never reach the staff; 13 Disqualification runs later, and the very same request repeated in 15 Evaluation comes back with one submission alone."
 					}
 				},
 				{
@@ -1810,7 +1815,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}",
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}&userId={{organizerId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1822,10 +1827,14 @@
 								{
 									"key": "hackathonId",
 									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "userId",
+									"value": "{{organizerId}}"
 								}
 							]
 						},
-						"description": "The same request as in 10 Submissions, run after 13 Disqualification: there it returned two submissions, here one. The elaborate of Byte Runners is still in the database and its registration still holds the history of the event, but the query leaves it out. This is the exclusion by projection: the judge does not choose to skip that submission, he never sees it."
+						"description": "The same request as in 10 Submissions, run after 13 Disqualification: there it returned two submissions, here one. The elaborate of Byte Runners is still in the database and its registration still holds the history of the event, but the query leaves it out. This is the exclusion by projection: nobody chooses to skip that submission, it is never seen. The reader is the organizer here as well, so that the two readings compare like with like: what changed between them is the disqualification, not who is asking."
 					}
 				},
 				{
