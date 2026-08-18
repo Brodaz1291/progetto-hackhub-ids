@@ -193,6 +193,11 @@ public class HackathonService {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
+        // the phase is checked before the user: the staff of an event that is over is settled,
+        // and no candidate makes it assignable again
+        if (!checkHackathonNotConcluded(hackathon)) {
+            throw new ValidationException("A mentor cannot be added to a concluded hackathon");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found: " + username));
         if (!checkNoActiveParticipation(user)) {
@@ -218,6 +223,9 @@ public class HackathonService {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
+        if (!checkHackathonNotConcluded(hackathon)) {
+            throw new ValidationException("A mentor cannot be removed from a concluded hackathon");
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found: " + username));
         // looking the mentor up inside the staff of this hackathon makes both the type and
@@ -279,6 +287,14 @@ public class HackathonService {
 
         notificationService.notifyJudge(newJudge);
         return newJudge;
+    }
+
+    /**
+     * The staff of a concluded event is the record of who ran it: the reports collected and the
+     * calls held point at those participations, so the roster is not touched any more.
+     */
+    private boolean checkHackathonNotConcluded(Hackathon hackathon) {
+        return hackathon.getState() != HackathonState.CONCLUDED;
     }
 
     /**
