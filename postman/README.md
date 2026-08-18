@@ -44,7 +44,7 @@ respects this order.
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers Byte Runners in the hackathon, then creates Null Pointers with `member2` and registers it too, saving the ids in `registrationId`, `teamId2` and `registrationId2` |
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
-| `10 Submissions` | Uploads the submission of the team, then reads it back from the list reserved to the staff of the hackathon and one by one through its id |
+| `10 Submissions` | Uploads the submission of each of the two teams, then reads them back from the list reserved to the staff of the hackathon and one by one through the id |
 | `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id; it closes with a second request whose call asks for the slot already booked, which the calendar refuses |
 | `12 Reports` | A mentor reports the team to the organizer, who reads the reports of the hackathon back: the whole list and the detail of one of them |
 | `13 Disqualification` | Refuses a disqualification with no reason, then disqualifies the registration saved by `08`, closing the participation of the team, then refuses the same disqualification a second time |
@@ -62,9 +62,9 @@ it as `{{hackathonId}}`, `{{teamId}}`, and so on.
 
 **The team is created by `member1`, not by one of the staff users.** A user takes part in one
 thing at a time: creating a hackathon makes `organizer1` its organizer, `judge1` its judge and
-`mentor1`/`mentor2` its mentors, and from that moment on none of them can join a team. Only
-`member1`, `member2` and `member3` are still free when `03 Team` runs, so the team is created
-by `member1`.
+`mentor1`/`mentor2` its mentors, and from that moment on none of them can join a team. Of the
+seeded users only `member1`, `member2` and `member3` are still free when `03 Team` runs, so the
+team is created by `member1`.
 
 **The dates of the hackathon are in February 2026.** What the application checks at creation is
 that they are coherent with one another — `registrationDeadline <= startDate < endDate` —
@@ -78,9 +78,10 @@ ones that decide the phases are those of the update: start on `2026-02-16T09:00`
 the team is disqualified it can no longer submit anything nor be evaluated, so keeping it in
 the middle of the collection would block everything that comes after it. `13 Disqualification`
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
-disqualification marks the registration instead of removing it. Only the folders that close the
+disqualification marks the registration instead of removing it. The folders that close the
 event run after — `14 Clock`, `15 Evaluation`, `16 Proclamation` and `17 Prize payment` — and
 they work on the hackathon and on the team left in the running, not on the one that is out.
+`18 Error handling` comes last of all.
 
 **The calendar keeps its agenda in memory, so no instant may be booked twice.** The slot of the
 call in `11 Support requests` is reserved on an external calendar the platform reaches through
@@ -88,9 +89,10 @@ an adapter, and in this project that calendar is simulated: it remembers the slo
 already given out and refuses a second event on the same people at the same instant, as a real
 one would. The call therefore books `2026-02-16T15:00`, and the request that closes
 `11 Support requests` asks for that very instant a second time on purpose: same slot, same
-mentor, same team, so the calendar refuses it and the platform answers `502`. Apart from that
-one, no other request may reuse it — a folder added later needs an instant of its own, or the
-booking comes back refused. The agenda lives as long as the application does, so it is emptied
+mentor, same team, so the calendar refuses it and the platform answers `502`. What the agenda
+holds is an entry per attendee rather than per instant, so a folder added later needs an instant
+of its own, or a mentor and a team that share nobody with this call, or the booking comes back
+refused. The agenda lives as long as the application does, so it is emptied
 by the same restart the database needs.
 
 **The prize is paid to the iban the winning team was created with.** The transfer of `17 Prize
@@ -104,9 +106,9 @@ of the hackathon, `6000` after the update of `02 Hackathon` and not the `5000` i
 with.
 
 **The reports come before the disqualification.** `12 Reports` is what the organizer decides
-upon, so the sanction reads naturally as its consequence. It also has to run while the team is
-still participating: a report is accepted only while the hackathon is `RUNNING`, and the
-disqualification would leave the team out of the event.
+upon, so the sanction reads naturally as its consequence. It also has to run before `14 Clock`:
+a report is accepted only while the hackathon is `RUNNING`, and that phase is the one condition
+the platform puts on it.
 
 **The submissions are read by the organizer, not by the judge.** Reading them is the one
 operation of the platform that depends on who is asking: it is granted to the staff of that
@@ -126,15 +128,18 @@ app.time.fixed=2026-02-01T18:00:01
 ```
 
 With `mode=fixed` the application starts frozen on that instant, and the collection can move it
-where it needs to. With `mode=system` it would follow the real time instead, and the requests of
-`09 Clock` would be refused with a message saying so.
+where it needs to. With `mode=system` it would follow the real time instead, and the `PUT` of
+`09 Clock` would be refused with a message saying so, while its `GET` would answer with the real
+time.
 
 **Why the collection needs to move the time.** The phases of a hackathon are not commanded by
 anyone: an event passes from `REGISTRATION` to `RUNNING` when its start date arrives, and from
 `RUNNING` to `EVALUATION` when its end date does. A submission is accepted only while the event
 is `RUNNING`, and so are a support request, the call that answers it and a report. Without
 moving the clock the hackathon of the collection would stay open to registrations forever, and
-`10 Submissions`, `11 Support requests` and `12 Reports` would be refused every time.
+every request that uploads, asks for support or reports would be refused. The readings of those
+same folders answer whatever the phase is: there it would be their assertions to fail, not the
+requests themselves.
 
 `09 Clock` therefore takes the time to `2026-02-16T10:00`, an hour after the start date set by
 the update in `02 Hackathon`. From there on the hackathon is `RUNNING`, and the three folders
@@ -144,8 +149,10 @@ frozen. The two folders together cover both the transitions that happen on their
 third one, towards `CONCLUDED`, is the only one somebody commands, and it is what
 `16 Proclamation` does.
 
-**The transitions happen while reading.** There is no scheduler: every service that loads a
-hackathon brings its phase up to date first. So the passage to `RUNNING` is not the effect of
+**The transitions happen while reading.** There is no scheduler: a service that gates on a phase
+the clock produces brings it up to date before reading it. The ones that only ask whether the
+event is concluded do not, because no passing of time ever reaches that phase: the proclamation
+is what writes it. So the passage to `RUNNING` is not the effect of
 the `PUT` on the clock, but of the first request that reads the hackathon afterwards — which is
 why in `14 Clock` the assertion on the state sits on the `GET` and not on the `PUT` that moves
 the time. This is also why the submission uploaded by `10 Submissions` is dated `2026-02-16`,
@@ -198,9 +205,12 @@ second request does not exist yet. Moving the pair earlier to improve the narrat
 two assertions.
 
 **`500 Internal Server Error` is not covered.** It answers an inconsistent state of the stored
-data — a hackathon whose organizer is missing, for instance — which no endpoint of the
-platform is able to produce: no request can bring it about, and forcing one would mean writing
-the inconsistency straight into the database.
+data — a hackathon whose organizer is missing, for instance — which no use case of the platform
+is able to produce: forcing one would mean writing the inconsistency straight into the database.
+Outside the use cases the development clock does produce it: `PUT /api/dev/clock` answers `500`
+on a malformed instant, and that body carries no `message`, because `IllegalArgumentException`
+is not among the types the handler maps. It is a development tool that sits outside the model,
+and the collection does not go down that path.
 
 ## The database is emptied at every restart
 
@@ -214,11 +224,12 @@ This has two consequences:
   collection variables still hold ids of a database that no longer exists;
 - the sequence cannot be run twice on the same running application: the second run would try
   to register a username that already exists and to create a team with a name already taken,
-  and both are rejected. `member1` would be refused as well, because it is already tied to the
-  team created by the first run, and so would `member3`, left as the judge of the hackathon by
-  `04 Staff`. `member2` is the exception, because `07 Leave team` takes them out of the team at
-  the very end, leaving them free to be invited again — but that changes nothing, since the run
-  is already broken well before the invitations. The registrations are the one thing that does
+  and both are rejected. `member1` and `member2` would be refused as well, because each of them
+  ends the run tied to a team: `member1` to Byte Runners, and `member2` to Null Pointers, which
+  `08 Registration` creates with them after `07 Leave team` has taken them out of the first one.
+  `member3` is the exception: `16 Proclamation` concludes the hackathon they judge, and a staff
+  role in a concluded event no longer counts as a participation, so they are free again — but
+  that changes nothing, since the run is already broken well before `04 Staff`. The registrations are the one thing that does
   not stand in the way: `16 Proclamation` concludes the hackathon, and a team is tied to the
   event it takes part in only until that event is over, so both teams end the run free to enrol
   again — which changes nothing, since the run is refused well before reaching them. To run the

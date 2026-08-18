@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "HackHub",
-		"description": "Happy paths of the HackHub REST API. Run the folders in order, from 00 Setup down: every request that creates something saves the generated id in a collection variable, so no id has to be typed by hand.",
+		"description": "The REST API of HackHub end to end: the happy path from 00 Setup to 17 Prize payment, and the requests that are meant to be refused in 18 Error handling. Run the folders in order: every request that creates something saves the generated id in a collection variable, so no id has to be typed by hand.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -477,7 +477,7 @@
 								"{{hackathonId}}"
 							]
 						},
-						"description": "The staff is not editable here: the body carries only the information proper to the hackathon. The dates move forward by a couple of days, and from here on it is these that decide the phases: the event starts on 2026-02-16 and ends on 2026-02-18, which is where 09 Clock takes the clock."
+						"description": "The staff is not editable here: the body carries only the information proper to the hackathon. The dates move forward by a couple of days, and from here on it is these that decide the phases: the event starts on 2026-02-16, where 09 Clock takes the clock, and ends on 2026-02-18, where 14 Clock takes it."
 					}
 				}
 			]
@@ -541,7 +541,7 @@
 		},
 		{
 			"name": "04 Staff",
-			"description": "Changes to the staff of the hackathon created in 02: a mentor is added and removed, then the judge is replaced. All three requests use member3, the last free user of the seeder.",
+			"description": "Changes to the staff of the hackathon created in 02: a mentor is added and removed, then the judge is replaced. All three requests use member3, one of the users still free at this point.",
 			"item": [
 				{
 					"name": "Add mentor",
@@ -578,7 +578,7 @@
 								}
 							]
 						},
-						"description": "member3 is the only user still free at this point: the others are already staff of the hackathon or members of the team created in 03. The response describes the user who became a mentor, not the participation."
+						"description": "member3 is free at this point: organizer1, judge1 and the two mentors are already staff of the hackathon, and member1 is in the team created in 03. member2 is free as well, and joins that team only in 05. The response describes the user who became a mentor, not the participation."
 					}
 				},
 				{
@@ -654,7 +654,7 @@
 								}
 							]
 						},
-						"description": "It runs after the removal on purpose: member3 becomes free again only once the mentor participation is gone, otherwise the replacement would be refused. The test moves judgeId onto the new judge: from here on judge1 is no longer staff of the hackathon, and a request reading that variable would be turned away."
+						"description": "It runs after the removal on purpose: member3 becomes free again only once the mentor participation is gone, otherwise the replacement would be refused. The test moves judgeId onto the new judge, so that the variable keeps pointing at whoever judges the hackathon: from here on judge1 is no longer staff of the event."
 					}
 				}
 			]
@@ -788,7 +788,7 @@
 		},
 		{
 			"name": "06 Consultation",
-			"description": "The read-only requests on the hackathons. They run last on purpose: by now the hackathon has been updated in 02 and its staff has changed in 04, so what they return is the outcome of the whole collection. The staff of the hackathon is organizer1, member3 as its judge in place of judge1, and mentor1 and mentor2 as its mentors.",
+			"description": "The read-only requests on the hackathons. They run here on purpose: by now the hackathon has been updated in 02 and its staff has changed in 04, so what they return already carries both. The staff of the hackathon is organizer1, member3 as its judge in place of judge1, and mentor1 and mentor2 as its mentors.",
 			"item": [
 				{
 					"name": "List hackathons",
@@ -962,7 +962,7 @@
 		},
 		{
 			"name": "08 Registration",
-			"description": "Registers in the hackathon the two teams the event runs on: Byte Runners, with member1 alone as the only member left after 07 Leave team, and Null Pointers, created here by member2. Two participants are needed because 13 Disqualification takes one of them out: with a single team the list of submissions read in 15 Evaluation would come back empty, and an empty list does not tell a filter that works from a hackathon with nothing left in it. The registrationId of Byte Runners is the one submissions, support requests and reports are addressed by, while the second registration is kept apart in registrationId2. The hackathon is still open to registrations. The disqualification used to live here and has been moved to 13 Disqualification, at the very end, because it closes the participation of the team.",
+			"description": "Registers in the hackathon the two teams the event runs on: Byte Runners, with member1 alone as the only member left after 07 Leave team, and Null Pointers, created here by member2. Two participants are needed because 13 Disqualification takes one of them out: with a single team the list of submissions read in 15 Evaluation would come back empty, and an empty list does not tell a filter that works from a hackathon with nothing left in it. The registrationId of Byte Runners is the one submissions, support requests and reports are addressed by, while the second registration is kept apart in registrationId2. The hackathon is still open to registrations. The disqualification used to live here and has been moved to 13 Disqualification, after everything that works on a participating team, because it closes the participation.",
 			"item": [
 				{
 					"name": "Register team",
@@ -1055,7 +1055,7 @@
 								}
 							]
 						},
-						"description": "The second team is created here and not in 03 Team because member2 is free only after 07 Leave team: while still inside Byte Runners the same user could not create anything. One member is enough to register, the size of the team is only compared with maxTeamSize."
+						"description": "The second team is created here and not in 03 Team because member2 belongs to Byte Runners from 05 Invitations until 07 Leave team, and a user already in a team cannot create another one. One member is enough to register, the size of the team is only compared with maxTeamSize."
 					}
 				},
 				{
@@ -1104,7 +1104,7 @@
 		},
 		{
 			"name": "09 Clock",
-			"description": "Moves the time of the platform to the day the hackathon starts. The clock is a development tool, not a use case: the endpoints it holds live under /api/dev and exist only in the dev profile. It runs here because everything before it belongs to a hackathon still open to registrations, and everything after it needs an event under way.",
+			"description": "Moves the time of the platform to the day the hackathon starts. The clock is a development tool, not a use case: the endpoints it holds live under /api/dev and exist only in the dev profile. It runs here because everything before it belongs to a hackathon still open to registrations, and 10, 11 and 12 need an event under way.",
 			"item": [
 				{
 					"name": "Read clock",
@@ -1177,7 +1177,7 @@
 		},
 		{
 			"name": "10 Submissions",
-			"description": "The submissions of the two teams, uploaded while the hackathon is under way, and the two ways of reading them back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened. Both teams hand in their elaborate while both are still in the event, so the list at the end of the folder holds two of them.",
+			"description": "The submissions of the two teams, uploaded while the hackathon is under way, and the two ways of reading them back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened. Both teams hand in their elaborate while both are still in the event, so the list read after the two uploads holds two of them.",
 			"item": [
 				{
 					"name": "Upload submission",
@@ -1640,7 +1640,7 @@
 		},
 		{
 			"name": "12 Reports",
-			"description": "A mentor reports to the organizer a team that violated the rules, and the organizer reads the reports of the hackathon back: the whole list and the detail of a single one. The folder sits between 09 Clock and 13 Clock like the submissions and the support requests, because a report is about behaviour held during the event and is accepted only while the hackathon is RUNNING. It comes before the disqualification on purpose: the report is what the organizer decides upon, so it makes sense that the sanction follows it.",
+			"description": "A mentor reports to the organizer a team that violated the rules, and the organizer reads the reports of the hackathon back: the whole list and the detail of a single one. The folder sits between 09 Clock and 14 Clock like the submissions and the support requests, because a report is about behaviour held during the event and is accepted only while the hackathon is RUNNING. It comes before the disqualification on purpose: the report is what the organizer decides upon, so it makes sense that the sanction follows it.",
 			"item": [
 				{
 					"name": "Report a team",
@@ -1756,7 +1756,7 @@
 		},
 		{
 			"name": "13 Disqualification",
-			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
+			"description": "It comes after everything that works on a participating team because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
 					"name": "Disqualify a team with no reason",
@@ -2157,7 +2157,7 @@
 								"{{hackathonId}}"
 							]
 						},
-						"description": "The same read as in 14 Clock, with the clock still standing past every date of the event. Every service that loads a hackathon brings its phase up to date first, so this request runs again the refresh that took the event to RUNNING and then to EVALUATION: here it changes nothing, because the phases only move forward and the concluded one is where they stop. The name of the winning team comes back from the association written by the request above, which is what tells a recorded winner from one that only travelled in a response."
+						"description": "The same read as in 14 Clock, with the clock still standing past every date of the event. Reading a hackathon is what brings its phase up to date, so this request runs again the refresh that took the event to RUNNING and then to EVALUATION: here it changes nothing, because the phases only move forward and the concluded one is where they stop. The name of the winning team comes back from the association written by the request above, which is what tells a recorded winner from one that only travelled in a response."
 					}
 				}
 			]
@@ -2204,11 +2204,11 @@
 					}
 				}
 			],
-			"description": "The prize of the concluded hackathon is transferred to Null Pointers, the team proclaimed in 16. It is the last act of the life cycle and it comes after everything else because it is the only operation that needs a hackathon already concluded with a winner: before the proclamation there is nobody to pay. The transfer is delegated to the payment system, which is external to the platform and simulated by a stub; what HackHub keeps is the record of the payment, so that the same prize cannot be paid twice. The account credited is the iban Null Pointers was created with in 08 Registration, read here for the first time in the collection."
+			"description": "The prize of the concluded hackathon is transferred to Null Pointers, the team proclaimed in 16. It is the last act of the life cycle and it follows the proclamation because it needs a hackathon already concluded with a winner: before the proclamation there is nobody to pay. The transfer is delegated to the payment system, which is external to the platform and simulated by a stub; what HackHub keeps is the record of the payment, so that the same prize cannot be paid twice. The account credited is the iban Null Pointers was created with in 08 Registration, read here for the first time in the collection."
 		},
 		{
 			"name": "18 Error handling",
-			"description": "The negative cases, in a folder of their own at the very end so that the happy path above can be read without interruptions. Every request here is refused, so none of them changes the state of the platform and the folder can be run again as many times as wanted. It covers four of the five statuses of the error contract: 400, 401, 404 and 409. The 502 lives at the end of 11 Support requests and the two errors of the disqualification in 13 Disqualification, because each of them needs a phase of the event that no longer exists down here. The 500 is not covered at all: it answers an inconsistent state of the stored data, such as a hackathon without an organizer, which no endpoint of the platform is able to produce.",
+			"description": "The negative cases, in a folder of their own at the very end so that the happy path above can be read without interruptions. Every request here is refused, so none of them changes the state of the platform and the folder can be run again as many times as wanted. It covers four of the five statuses of the error contract: 400, 401, 404 and 409. The 502 lives at the end of 11 Support requests and the two errors of the disqualification in 13 Disqualification, because each of them needs a phase of the event that no longer exists down here. The 500 is not covered at all: it answers an inconsistent state of the stored data, such as a hackathon without an organizer, which no use case of the platform is able to produce. The development clock does produce one on a malformed instant, but it sits outside the model and the collection does not go down that path.",
 			"item": [
 				{
 					"name": "Pay a prize already paid",
