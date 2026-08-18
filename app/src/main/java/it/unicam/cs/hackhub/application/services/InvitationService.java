@@ -95,6 +95,31 @@ public class InvitationService {
     }
 
     /**
+     * Marks an invitation as refused. Unlike the acceptance no membership follows, so the
+     * invitation simply stops being pending and no other aggregate is touched.
+     */
+    public Invitation declineInvitation(Long invitationId, Long userId) {
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new NotFoundException("Invitation not found: " + invitationId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+
+        // as for the acceptance, only the recipient answers an invitation
+        Long recipientId = invitation.getRecipient().getId();
+        if (!recipientId.equals(user.getId())) {
+            throw new ValidationException("Invitation " + invitationId + " is not addressed to user " + userId);
+        }
+        if (invitation.getStatus() != InvitationState.PENDING) {
+            throw new ConflictException("Invitation " + invitationId + " has already been answered");
+        }
+        // no participation check here: refusing creates no membership, so a user who joined a
+        // team in the meantime must still be able to close the invitations left pending
+
+        markDeclined(invitation);
+        return invitationRepository.save(invitation);
+    }
+
+    /**
      * A user takes part in one thing at a time: either a team membership or a staff role in
      * a hackathon that is still running. The query looks at both branches of the hierarchy.
      */
@@ -105,5 +130,9 @@ public class InvitationService {
 
     private void markAccepted(Invitation invitation) {
         invitation.setStatus(InvitationState.ACCEPTED);
+    }
+
+    private void markDeclined(Invitation invitation) {
+        invitation.setStatus(InvitationState.DECLINED);
     }
 }
