@@ -30,7 +30,7 @@ public class EvaluationService {
     /**
      * Records the evaluation of a submission. Evaluating again replaces the previous score and
      * judgment: the judge can change his mind until the hackathon is over, exactly as the team
-     * can hand in its elaborate again while the event is running.
+     * can hand in its work again while the event is running.
      */
     @Transactional
     public Evaluation evaluateSubmission(Long submissionId, int score, String judgment) {
@@ -65,7 +65,7 @@ public class EvaluationService {
 
     /**
      * The judgment belongs to the evaluation phase: while the event is running the team can
-     * still upload its elaborate again, so a score expressed then would fall on a content that
+     * still upload its entry again, so a score expressed then would fall on a content that
      * can still change.
      */
     private boolean checkHackathonInEvaluation(Hackathon hackathon) {
