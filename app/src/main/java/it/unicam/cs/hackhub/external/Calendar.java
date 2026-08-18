@@ -11,12 +11,13 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The third party calendar the calls are booked on. It is not our code: the signature is the
- * one the external system offers, and only the operation the platform consumes is modelled.
+ * The calendar of a third party, where the calls between a mentor and a team end up as
+ * events. It is not our code: the signature is the one the external system offers, and only
+ * the operation the platform consumes is modelled.
  *
- * This is a stub: the booking is simulated in memory, where a real system would answer over
- * the network. What is kept from the real behaviour is the refusal, so that an answer which
- * is not a confirmation stays a case the platform has to cope with.
+ * The booking is simulated in memory, where the real calendar would answer over the network.
+ * What is kept from the real behaviour is the refusal, so that an answer which is not a
+ * confirmation stays a case the platform has to cope with.
  *
  * The agenda lives as long as the application and nothing ever empties it: the set of the
  * busy slots only grows, and asking twice for the same slot with the same people is refused

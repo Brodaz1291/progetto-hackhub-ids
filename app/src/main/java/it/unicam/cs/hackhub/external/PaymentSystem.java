@@ -7,18 +7,14 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 /**
- * The third party payment system the prizes are transferred through. It is not our code: the
- * signature is the one the external system offers, and only the operation the platform
- * consumes is modelled.
- *
- * This is a stub: the transfer is simulated, where a real system would answer over the
- * network. What is kept from the real behaviour is the refusal, so that an answer which is not
- * a confirmation stays a case the platform has to cope with.
+ * Simulated payment system the prizes are moved through, cut down to the single operation
+ * the platform needs; the signature is the provider's, not ours. The refusal is the piece of
+ * real behaviour that survives the simulation: a transfer can still come back unconfirmed,
+ * exactly as with a real bank.
  *
  * Unlike the Calendar stub, nothing is remembered between calls: a bank does not refuse a
- * transfer because it has already executed a similar one, and a register of the transactions
- * done would refuse the second prize of the same amount to the same team as a duplicate.
- * Whether a prize has already been paid is the platform's own business, not the system's.
+ * transfer because it has already made a similar one. Whether a prize has already been paid
+ * is the platform's own business, answered by the payment it recorded, not by the system.
  */
 @Component
 public class PaymentSystem {

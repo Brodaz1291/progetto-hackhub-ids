@@ -25,9 +25,6 @@ public class ReportController {
         this.dtoMapper = dtoMapper;
     }
 
-    /**
-     * Reports to the organizer a team that violated the rules of the hackathon.
-     */
     @PostMapping
     public ReportDTO reportTeam(@RequestParam Long registrationId,
                                 @RequestParam String reason) {
@@ -35,9 +32,6 @@ public class ReportController {
         return dtoMapper.toDTO(report);
     }
 
-    /**
-     * Returns the reports collected by a hackathon, for the organizer to consult.
-     */
     @GetMapping
     public List<ReportDTO> getReports(@RequestParam Long hackathonId) {
         List<Report> reports = reportService.getReports(hackathonId);

@@ -661,7 +661,7 @@
 		},
 		{
 			"name": "05 Invitations",
-			"description": "member1 invites member2 into the team created in 03, and member2 accepts. A second invitation goes to newcomer, the user registered in 01 Auth, who refuses it: both the answers an invitation can get are covered here. The first three requests go through TeamFacade, which coordinates the state of the invitation with the membership; the refusal does not, because it creates no membership and notifies nobody, so InvitationService is the only service it touches.",
+			"description": "member1 invites member2 into the team created in 03, and member2 accepts. A second invitation goes to newcomer, the user registered in 01 Auth, who refuses it: both the answers an invitation can get are covered here. The refusal is the only request of the folder that does not go through TeamFacade. Every other one does, the acceptance above all: it is the request that coordinates the state of the invitation with the membership TeamService creates, which is what a facade is for. The refusal creates no membership and notifies nobody, so InvitationService is the only service it touches and there would be nothing left to coordinate.",
 			"item": [
 				{
 					"name": "Send invitation",
@@ -750,7 +750,7 @@
 								}
 							]
 						},
-						"description": "newcomer takes part in nothing: registered in 01 Auth and never enrolled anywhere since, it is the one user left free at this point of the sequence, as 04 Staff has taken member3 as judge and everybody else is either staff of the hackathon or already in the team. This invitation is left unanswered on purpose: it is what the refusal closing the folder answers to."
+						"description": "newcomer is not the only user free at this point — judge1 is free as well, as the replacement in 04 Staff removed it from the staff and the orphanRemoval on that list deleted its participation along with it — but it is the only one that has taken part in nothing for the whole run: judge1 has been the judge of the hackathon up to 04, member2 is free only until it accepts above, and everybody else is either staff of the hackathon or already in the team. Picking the user with no history at all keeps this invitation independent of what the earlier folders did to the others. It is left unanswered on purpose: it is what the refusal closing the folder answers to."
 					}
 				},
 				{
@@ -1262,7 +1262,7 @@
 		},
 		{
 			"name": "10 Submissions",
-			"description": "The submissions of the two teams, uploaded while the hackathon is under way, and the two ways of reading them back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened. Both teams hand in their elaborate while both are still in the event, so the list read after the two uploads holds two of them.",
+			"description": "The submissions of the two teams, uploaded while the hackathon is under way, and the two ways of reading them back. A submission is accepted only while the event is RUNNING: this folder works because 09 Clock has moved the time past the start date, and the upload is what proves the transition happened. Both teams hand in their work while both are still in the event, so the list read after the two uploads holds two of them.",
 			"item": [
 				{
 					"name": "Upload submission",
@@ -1311,7 +1311,7 @@
 								}
 							]
 						},
-						"description": "Uploading and updating are the same operation: sending this request again would replace the data of the submission instead of creating a second one, because a team hands in one elaborate. The submissionDate is not sent by the client, the platform stamps it with its own time: this is why the test expects the day the clock was moved to and not the real one."
+						"description": "Uploading and updating are the same operation: sending this request again would replace the data of the submission instead of creating a second one, because a team hands in one entry. The submissionDate is not sent by the client, the platform stamps it with its own time: this is why the test expects the day the clock was moved to and not the real one."
 					}
 				},
 				{
@@ -1361,7 +1361,7 @@
 								}
 							]
 						},
-						"description": "The elaborate of the team that is not disqualified later on: it is the submission the judge evaluates in 15 Evaluation. Same request as the one above with the other registration, so the id it saves is kept apart in submissionId2."
+						"description": "The work of the team that is not disqualified later on: it is the submission the judge evaluates in 15 Evaluation. Same request as the one above with the other registration, so the id it saves is kept apart in submissionId2."
 					}
 				},
 				{
@@ -1437,7 +1437,7 @@
 								"{{submissionId}}"
 							]
 						},
-						"description": "The detail of a single submission, read through the id the upload saved. It is the request the judge opens to look at one elaborate: the score and the judgment come back null, as nothing has been evaluated yet."
+						"description": "The detail of a single submission, read through the id the upload saved. It is the request the judge opens to look at one entry: the score and the judgment come back null, as nothing has been evaluated yet."
 					}
 				}
 			]
@@ -1996,7 +1996,7 @@
 								}
 							]
 						},
-						"description": "An hour after the end date set by the update in 02 Hackathon. From here on the elaborates are frozen: a further upload would be refused, because submissions belong to the event in progress."
+						"description": "An hour after the end date set by the update in 02 Hackathon. From here on the entries are frozen: a further upload would be refused, because submissions belong to the event in progress."
 					}
 				},
 				{
@@ -2034,7 +2034,7 @@
 		},
 		{
 			"name": "15 Evaluation",
-			"description": "The judge expresses himself on the submissions, in the phase the clock reached in 14 Clock. The folder opens by reading the list again, to show what the disqualification changed, then evaluates the elaborate still in the running and evaluates it a second time: a score is not terminal, the judge can go back on it while the hackathon is being judged, exactly as a team could hand in its elaborate again while the event was running.",
+			"description": "The judge expresses himself on the submissions, in the phase the clock reached in 14 Clock. The folder opens by reading the list again, to show what the disqualification changed, then evaluates the entry still in the running and evaluates it a second time: a score is not terminal, the judge can go back on it while the hackathon is being judged, exactly as a team could hand in its work again while the event was running.",
 			"item": [
 				{
 					"name": "List the submissions to evaluate",
@@ -2078,7 +2078,7 @@
 								}
 							]
 						},
-						"description": "The same request as in 10 Submissions, run after 13 Disqualification: there it returned two submissions, here one. The elaborate of Byte Runners is still in the database and its registration still holds the history of the event, but the query leaves it out. This is the exclusion by projection: nobody chooses to skip that submission, it is never seen. The reader is the organizer here as well, so that the two readings compare like with like: what changed between them is the disqualification, not who is asking."
+						"description": "The same request as in 10 Submissions, run after 13 Disqualification: there it returned two submissions, here one. The submission of Byte Runners is still in the database and its registration still holds the history of the event, but the query leaves it out. This is the exclusion by projection: nobody chooses to skip that submission, it is never seen. The reader is the organizer here as well, so that the two readings compare like with like: what changed between them is the disqualification, not who is asking."
 					}
 				},
 				{

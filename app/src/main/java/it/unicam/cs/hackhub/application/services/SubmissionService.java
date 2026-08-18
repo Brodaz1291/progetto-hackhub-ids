@@ -78,7 +78,7 @@ public class SubmissionService {
 
     /**
      * Submissions belong to the event in progress: before it starts there is nothing to hand
-     * in yet, once it is over the elaborates are frozen for the evaluation.
+     * in yet, once it is over the entries are frozen for the evaluation.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
         return hackathon.getState() == HackathonState.RUNNING;
@@ -94,8 +94,7 @@ public class SubmissionService {
 
     /**
      * The overwriting updates the existing submission instead of creating another one: the
-     * identity of the elaborate is the same, so whatever is already attached to it survives
-     * the update.
+     * identity stays the same, so whatever is already attached to it survives the update.
      */
     private void replaceSubmissionData(Submission submission, String title, String description, String link) {
         submission.setTitle(title);
@@ -125,7 +124,7 @@ public class SubmissionService {
 
     /**
      * The role covered makes no difference: organizer, judge and mentor all consult the
-     * elaborates of their own event. What is decisive is the membership, so it is enough to
+     * submissions of their own event. What is decisive is the membership, so it is enough to
      * find the user among the staff participations of this hackathon.
      *
      * The staff is read outside a transaction because HackathonRepository.findById fetches it

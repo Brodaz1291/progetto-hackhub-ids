@@ -47,7 +47,7 @@ public class SubmissionController {
 
     /**
      * The identity of who is reading travels as a parameter because the access to the
-     * elaborates is granted to the staff of that hackathon only.
+     * submissions is granted to the staff of that hackathon only.
      */
     @GetMapping
     public List<SubmissionDTO> getSubmissions(@RequestParam Long hackathonId,
@@ -66,16 +66,14 @@ public class SubmissionController {
      * Records the score and the judgment a judge expresses on a submission.
      *
      * NOTE: the submission is returned instead of the evaluation because its projection
-     * already carries score and judgment, so the client reads the elaborate back with the
-     * verdict attached.
+     * already carries score and judgment, so the client reads it back with the verdict
+     * attached.
      *
      * It is read again because the association goes from the submission to its evaluation
-     * only, and that is on purpose: an evaluation makes no sense detached from the elaborate
-     * it judges, which is the one owning it. Where the two ends are both navigable, as
-     * between a support request and its call, it is because someone really starts from one to
-     * reach the other: the team consulting a request has to see whether an appointment
-     * answers it. Nobody starts from an evaluation looking for its submission, so the second
-     * reading is the price of keeping the association pointing the only way it is travelled.
+     * only, and that is on purpose: an evaluation makes no sense detached from the work it
+     * judges, which is the one owning it. Nobody starts from an evaluation looking for its
+     * submission, so the second reading is the price of keeping the association pointing the
+     * only way it is travelled.
      */
     @PostMapping("/{submissionId}/evaluation")
     public SubmissionDTO evaluateSubmission(@PathVariable Long submissionId,
