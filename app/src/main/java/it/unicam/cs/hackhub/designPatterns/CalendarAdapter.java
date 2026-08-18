@@ -1,5 +1,6 @@
 package it.unicam.cs.hackhub.designPatterns;
 
+import it.unicam.cs.hackhub.application.exceptions.ExternalServiceException;
 import it.unicam.cs.hackhub.external.Calendar;
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import it.unicam.cs.hackhub.model.entities.Team;
@@ -42,7 +43,7 @@ public class CalendarAdapter implements CallScheduler {
 
         String externalId = calendar.createEvent(title, dateTime, CALL_DURATION_MINUTES, attendees);
         if (externalId == null) {
-            throw new IllegalArgumentException("The calendar has no slot free on " + dateTime);
+            throw new ExternalServiceException("The calendar has no slot free on " + dateTime);
         }
         return externalId;
     }

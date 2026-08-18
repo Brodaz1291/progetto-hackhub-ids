@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Registration;
 import it.unicam.cs.hackhub.model.entities.StaffParticipation;
@@ -50,16 +52,16 @@ public class SubmissionService {
     @Transactional
     public Submission uploadSubmission(Long registrationId, String title, String description, String link) {
         Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
-            throw new IllegalArgumentException("Submissions are accepted only while the hackathon is running");
+            throw new ValidationException("Submissions are accepted only while the hackathon is running");
         }
         if (!checkNotDisqualified(registration)) {
-            throw new IllegalArgumentException("Registration " + registrationId + " is disqualified");
+            throw new ValidationException("Registration " + registrationId + " is disqualified");
         }
         if (!checkSubmissionData(title, description, link)) {
-            throw new IllegalArgumentException("Title, description and link of the submission are required");
+            throw new ValidationException("Title, description and link of the submission are required");
         }
 
         Submission submission = registration.getSubmission();
@@ -111,11 +113,11 @@ public class SubmissionService {
      */
     public List<Submission> getSubmissions(Long hackathonId, Long userId) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         if (!checkStaffAssigned(user, hackathon)) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "User " + userId + " is not staff of hackathon " + hackathonId);
         }
         return submissionRepository.findByHackathonIdNotDisqualified(hackathonId);
@@ -140,6 +142,6 @@ public class SubmissionService {
 
     public Submission getSubmission(Long submissionId) {
         return submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
+                .orElseThrow(() -> new NotFoundException("Submission not found: " + submissionId));
     }
 }

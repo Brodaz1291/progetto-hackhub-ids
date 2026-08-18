@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.designPatterns;
 
+import it.unicam.cs.hackhub.application.exceptions.ExternalServiceException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.external.PaymentSystem;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +32,7 @@ public class PaymentAdapter implements PaymentProcessor {
     public String transfer(String iban, BigDecimal amount) {
         String externalId = paymentSystem.executeTransaction(iban, toCents(amount), CURRENCY);
         if (externalId == null) {
-            throw new IllegalArgumentException("The payment system did not confirm the transfer of " + amount);
+            throw new ExternalServiceException("The payment system did not confirm the transfer of " + amount);
         }
         return externalId;
     }
@@ -45,7 +47,7 @@ public class PaymentAdapter implements PaymentProcessor {
         try {
             return amount.movePointRight(2).setScale(0, RoundingMode.UNNECESSARY).longValueExact();
         } catch (ArithmeticException e) {
-            throw new IllegalArgumentException(amount + " is not an amount that can be transferred in cents");
+            throw new ValidationException(amount + " is not an amount that can be transferred in cents");
         }
     }
 }
