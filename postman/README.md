@@ -41,7 +41,7 @@ respects this order.
 | `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
-| `08 Registration` | Registers the team in the hackathon, saving the returned id in `registrationId` |
+| `08 Registration` | Registers Byte Runners in the hackathon, then creates Null Pointers with `member2` and registers it too, saving the ids in `registrationId`, `teamId2` and `registrationId2` |
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
 | `10 Submissions` | Uploads the submission of the team, then reads it back from the list reserved to the staff of the hackathon and one by one through its id |
 | `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
@@ -50,6 +50,7 @@ respects this order.
 | `14 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
 | `15 Evaluation` | Reads the submissions left to evaluate, scores the one of the team still in the running and scores it again, replacing the first judgment |
 | `16 Proclamation` | Proclaims `Null Pointers` the winner, which concludes the hackathon, then reads it back to see the terminal phase hold |
+| `17 Prize payment` | Pays the prize of the concluded hackathon to `Null Pointers`, transferring it to the iban the team was created with |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -76,8 +77,8 @@ the team is disqualified it can no longer submit anything nor be evaluated, so k
 the middle of the collection would block everything that comes after it. `13 Disqualification`
 still works on the `registrationId` saved by `08 Registration`, which stays valid because the
 disqualification marks the registration instead of removing it. Only the folders that close the
-event run after — `14 Clock`, `15 Evaluation` and `16 Proclamation` — and they work on the
-hackathon and on the team left in the running, not on the one that is out.
+event run after — `14 Clock`, `15 Evaluation`, `16 Proclamation` and `17 Prize payment` — and
+they work on the hackathon and on the team left in the running, not on the one that is out.
 
 **The calendar keeps its agenda in memory, so no instant may be booked twice.** The slot of the
 call in `11 Support requests` is reserved on an external calendar the platform reaches through
@@ -86,6 +87,16 @@ already given out and refuses a second event on the same people at the same inst
 one would. The call therefore books `2026-02-16T15:00` and no other request may reuse it — a
 folder added later needs an instant of its own, or the booking comes back refused. The agenda
 lives as long as the application does, so it is emptied by the same restart the database needs.
+
+**The prize is paid to the iban the winning team was created with.** The transfer of `17 Prize
+payment` goes through an adapter as well, and the payment system behind it is simulated like the
+calendar — but it keeps no memory of what it has transferred: a bank does not refuse a transfer
+because it has already made a similar one, and whether a prize has already been paid is a
+question the platform answers on the payment it recorded. What the stub does refuse is an
+account it cannot credit and an amount of zero, so the iban `Null Pointers` carries from
+`08 Registration` is what lets the request through. The amount is typed nowhere: it is the prize
+of the hackathon, `6000` after the update of `02 Hackathon` and not the `5000` it was created
+with.
 
 **The reports come before the disqualification.** `12 Reports` is what the organizer decides
 upon, so the sanction reads naturally as its consequence. It also has to run while the team is
@@ -132,8 +143,9 @@ third one, towards `CONCLUDED`, is the only one somebody commands, and it is wha
 hackathon brings its phase up to date first. So the passage to `RUNNING` is not the effect of
 the `PUT` on the clock, but of the first request that reads the hackathon afterwards — which is
 why in `14 Clock` the assertion on the state sits on the `GET` and not on the `PUT` that moves
-the time. This is also why the submission uploaded by `10 Submissions` is dated `2026-02-16`:
-the platform stamps it with the time of its clock, not with the real one.
+the time. This is also why the submission uploaded by `10 Submissions` is dated `2026-02-16`,
+and the payment of `17 Prize payment` `2026-02-18T19:00`: the platform stamps them with the
+time of its clock, not with the real one.
 
 **The endpoints of the clock are a development tool, not a use case.** They live under
 `/api/dev/clock` and exist only in the `dev` profile: in any other profile the controller is not
@@ -141,10 +153,6 @@ created at all, so the paths do not answer. They are there to let a demonstratio
 the whole life cycle of an event in a single run, without waiting for the real dates.
 
 ## What the collection does not cover yet
-
-**The payment of the prize to the winning team**, which belongs to a feature not implemented
-yet. The collection now leaves the hackathon `CONCLUDED` with its winner recorded, which is the
-state the payment starts from, so it will graft onto the end of it.
 
 **The requests that are meant to be refused.** Every request here is a happy path. The access to
 the submissions is granted to the staff of the hackathon alone, but the attempt of somebody who

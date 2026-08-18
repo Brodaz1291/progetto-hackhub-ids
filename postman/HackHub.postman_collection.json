@@ -1928,7 +1928,7 @@
 		},
 		{
 			"name": "16 Proclamation",
-			"description": "The third transition of the state diagram, and the only one somebody commands: the organizer proclaims the winner and the hackathon reaches CONCLUDED. Registering the winner and concluding the event are a single act, because a concluded hackathon with nobody proclaimed is a state the model admits only when there is nothing to choose from. The team proclaimed is Null Pointers, which 13 Disqualification left as the only one in the running and 15 Evaluation as the only one with a score. The folder closes the collection because the phase it reaches is terminal: from here on nothing is modifiable any more, neither a disqualification nor a second evaluation would be accepted.",
+			"description": "The third transition of the state diagram, and the only one somebody commands: the organizer proclaims the winner and the hackathon reaches CONCLUDED. Registering the winner and concluding the event are a single act, because a concluded hackathon with nobody proclaimed is a state the model admits only when there is nothing to choose from. The team proclaimed is Null Pointers, which 13 Disqualification left as the only one in the running and 15 Evaluation as the only one with a score. The phase it reaches is terminal: from here on nothing of the event is modifiable any more, neither a disqualification nor a second evaluation would be accepted. What follows in 17 is not a change of the hackathon but its consequence.",
 			"item": [
 				{
 					"name": "Proclaim the winner",
@@ -2002,6 +2002,50 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "17 Prize payment",
+			"item": [
+				{
+					"name": "Pay the prize",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the amount paid is the prize of the hackathon\", () => pm.expect(Number(pm.response.json().amount)).to.eql(6000));",
+									"pm.test(\"the payment is dated on the clock of the platform\", () => pm.expect(pm.response.json().date).to.include(\"2026-02-18T19:00\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/prize?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"prize"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The hackathon is the only parameter: which registration gets paid is not a choice of the client but the winner proclaimed in 16, and the amount is the prize of the event, nobody types it in. The path has no identifier of a registration for the same reason the one of Register team has none. The amount asserted is 6000 and not the 5000 the hackathon was created with, because 02 Hackathon updates it while the registrations are still open. The date asserted is the instant 14 Clock left the platform on: it is the proof that the payment is dated on the clock of the platform and not on the real time, which is what lets the whole life cycle be walked through in one run. The response describes the payment recorded, without the identifier of the transaction: that one belongs to the payment system and is kept on the server side, where the log shows it together with the amount converted into cents."
+					}
+				}
+			],
+			"description": "The prize of the concluded hackathon is transferred to Null Pointers, the team proclaimed in 16. It is the last act of the life cycle and it comes after everything else because it is the only operation that needs a hackathon already concluded with a winner: before the proclamation there is nobody to pay. The transfer is delegated to the payment system, which is external to the platform and simulated by a stub; what HackHub keeps is the record of the payment, so that the same prize cannot be paid twice. The account credited is the iban Null Pointers was created with in 08 Registration, read here for the first time in the collection."
 		}
 	],
 	"variable": [
