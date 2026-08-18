@@ -29,17 +29,20 @@ public class TeamService {
     private final ParticipationRepository participationRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final RegistrationRepository registrationRepository;
+    private final HackathonLifecycle hackathonLifecycle;
 
     public TeamService(TeamRepository teamRepository,
                        UserRepository userRepository,
                        ParticipationRepository participationRepository,
                        TeamMemberRepository teamMemberRepository,
-                       RegistrationRepository registrationRepository) {
+                       RegistrationRepository registrationRepository,
+                       HackathonLifecycle hackathonLifecycle) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.participationRepository = participationRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.registrationRepository = registrationRepository;
+        this.hackathonLifecycle = hackathonLifecycle;
     }
 
     /**
@@ -108,6 +111,12 @@ public class TeamService {
         TeamMember leavingMember = teamMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("User is not a member of any team: " + userId));
         Team team = leavingMember.getTeam();
+        // the phases are brought up to date before any check reads them: the transitions are
+        // applied on reading, so a hackathon whose start date has passed still looks open
+        // until somebody reads it, and the team could be left in the middle of the event
+        List<Registration> registrations = registrationRepository.findByTeamId(team.getId());
+        registrations.forEach(registration -> hackathonLifecycle.refreshState(registration.getHackathon()));
+
         if (!checkNoOngoingParticipation(team)) {
             throw new ValidationException(
                     "A team cannot be left while it takes part in a hackathon in progress: " + team.getId());
@@ -125,8 +134,7 @@ public class TeamService {
             } else {
                 // the registrations left are all still open, and they belong to the hackathon
                 // rather than to the team: no cascade reaches them, so they go explicitly
-                List<Registration> openRegistrations = registrationRepository.findByTeamId(team.getId());
-                registrationRepository.deleteAll(openRegistrations);
+                registrationRepository.deleteAll(registrations);
                 teamRepository.delete(team);
             }
         } else {
