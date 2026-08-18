@@ -3,6 +3,7 @@ package it.unicam.cs.hackhub.controllers;
 import it.unicam.cs.hackhub.application.dtos.InvitationDTO;
 import it.unicam.cs.hackhub.application.dtos.TeamDTO;
 import it.unicam.cs.hackhub.application.mappers.DTOMapper;
+import it.unicam.cs.hackhub.application.services.InvitationService;
 import it.unicam.cs.hackhub.application.services.TeamService;
 import it.unicam.cs.hackhub.controllers.requests.CreateTeamRequest;
 import it.unicam.cs.hackhub.designPatterns.TeamFacade;
@@ -25,11 +26,16 @@ import java.util.List;
 public class TeamController {
 
     private final TeamService teamService;
+    private final InvitationService invitationService;
     private final TeamFacade teamFacade;
     private final DTOMapper dtoMapper;
 
-    public TeamController(TeamService teamService, TeamFacade teamFacade, DTOMapper dtoMapper) {
+    public TeamController(TeamService teamService,
+                          InvitationService invitationService,
+                          TeamFacade teamFacade,
+                          DTOMapper dtoMapper) {
         this.teamService = teamService;
+        this.invitationService = invitationService;
         this.teamFacade = teamFacade;
         this.dtoMapper = dtoMapper;
     }
@@ -79,5 +85,19 @@ public class TeamController {
                                           @RequestParam Long userId) {
         Invitation acceptedInvitation = teamFacade.acceptInvitation(invitationId, userId);
         return dtoMapper.toDTO(acceptedInvitation);
+    }
+
+    /**
+     * Refuses an invitation. It does not go through the facade because no other service is
+     * involved: the refusal creates no membership and notifies nobody.
+     *
+     * The path carries a sub-resource because the acceptance already answers PUT on the
+     * invitation itself, and the two answers cannot share verb and path.
+     */
+    @PutMapping("/invitations/{invitationId}/refusal")
+    public InvitationDTO declineInvitation(@PathVariable Long invitationId,
+                                           @RequestParam Long userId) {
+        Invitation declinedInvitation = invitationService.declineInvitation(invitationId, userId);
+        return dtoMapper.toDTO(declinedInvitation);
     }
 }
