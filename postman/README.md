@@ -69,12 +69,15 @@ team is created by `member1`.
 **The invitation that gets refused is addressed to `newcomer`.** Sending an invitation requires
 the invited user to be free, and by `05 Invitations` almost nobody is: `organizer1`, `mentor1` and
 `mentor2` are staff of the hackathon, `member3` has become its judge in `04 Staff`, and `member1`
-is in the team it would be invited into. `member2` is free there, but it is the one that accepts,
-and it cannot serve twice: a user already in a team can no longer be invited. `newcomer`, the user
-registered in `01 Auth`, is the one that takes part in nothing for the whole run, so the second
-invitation goes to it and stays pending until the refusal that closes the folder. Being addressed
-to a different user is also what keeps the two invitations apart: `Get invitations` reads the list
-of `member2`, which holds its own invitation and nothing else.
+is in the team it would be invited into. `judge1` is the one that comes back free: the replacement
+in `04 Staff` takes it out of the staff, and the `orphanRemoval` on that list deletes its
+participation with it, so from there on nothing ties it to the hackathon any more. `member2` is
+free here too, but it is the one that accepts, and it cannot serve twice: a user already in a team
+can no longer be invited. `newcomer`, the user registered in `01 Auth`, is the one that takes part
+in nothing for the whole run, so the second invitation goes to it and stays pending until the
+refusal that closes the folder. Being addressed to a different user is also what keeps the two
+invitations apart: `Get invitations` reads the list of `member2`, which holds its own invitation
+and nothing else.
 
 **The dates of the hackathon are in February 2026.** What the application checks at creation is
 that they are coherent with one another — `registrationDeadline <= startDate < endDate` —

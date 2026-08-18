@@ -661,7 +661,7 @@
 		},
 		{
 			"name": "05 Invitations",
-			"description": "member1 invites member2 into the team created in 03, and member2 accepts. A second invitation goes to newcomer, the user registered in 01 Auth, who refuses it: both the answers an invitation can get are covered here. The first three requests go through TeamFacade, which coordinates the state of the invitation with the membership; the refusal does not, because it creates no membership and notifies nobody, so InvitationService is the only service it touches.",
+			"description": "member1 invites member2 into the team created in 03, and member2 accepts. A second invitation goes to newcomer, the user registered in 01 Auth, who refuses it: both the answers an invitation can get are covered here. The refusal is the only request of the folder that does not go through TeamFacade. Every other one does, the acceptance above all: it is the request that coordinates the state of the invitation with the membership TeamService creates, which is what a facade is for. The refusal creates no membership and notifies nobody, so InvitationService is the only service it touches and there would be nothing left to coordinate.",
 			"item": [
 				{
 					"name": "Send invitation",
@@ -750,7 +750,7 @@
 								}
 							]
 						},
-						"description": "newcomer takes part in nothing: registered in 01 Auth and never enrolled anywhere since, it is the one user left free at this point of the sequence, as 04 Staff has taken member3 as judge and everybody else is either staff of the hackathon or already in the team. This invitation is left unanswered on purpose: it is what the refusal closing the folder answers to."
+						"description": "newcomer is not the only user free at this point — judge1 is free as well, as the replacement in 04 Staff removed it from the staff and the orphanRemoval on that list deleted its participation along with it — but it is the only one that has taken part in nothing for the whole run: judge1 has been the judge of the hackathon up to 04, member2 is free only until it accepts above, and everybody else is either staff of the hackathon or already in the team. Picking the user with no history at all keeps this invitation independent of what the earlier folders did to the others. It is left unanswered on purpose: it is what the refusal closing the folder answers to."
 					}
 				},
 				{
