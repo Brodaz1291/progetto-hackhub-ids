@@ -1443,7 +1443,7 @@
 								}
 							]
 						},
-						"description": "The call is planned under the request it answers, because that is where it belongs: a mentor does not open an appointment out of nothing, they take over a team that asked for help. The mentorId is the id of the user who mentors the event, the one the login saved, and the platform looks for it inside the staff of the hackathon: a mentor of another event cannot answer this request. The slot is five hours ahead of the clock that 09 Clock left at 10:00, because a call is planned, not held in the past. The instant belongs to this request alone: the calendar is a stub that refuses the same slot for the same people twice, so no other request of the collection may book it again. What comes back is the request, not the call: the callDateTime it now carries is the appointment, and the HANDLED status is the request leaving the hands of the mentors."
+						"description": "The call is planned under the request it answers, because that is where it belongs: a mentor does not open an appointment out of nothing, they take over a team that asked for help. The mentorId is the id of the user who mentors the event, the one the login saved, and the platform looks for it inside the staff of the hackathon: a mentor of another event cannot answer this request. The slot is five hours ahead of the clock that 09 Clock left at 10:00, because a call is planned, not held in the past. The instant is booked here and asked for a second time on purpose at the end of this folder: the calendar is a stub that refuses the same slot for the same people twice, and \"Schedule a call on a slot already taken\" exists in order to be refused. No other request of the collection may book it. What comes back is the request, not the call: the callDateTime it now carries is the appointment, and the HANDLED status is the request leaving the hands of the mentors."
 					}
 				},
 				{
@@ -1551,6 +1551,89 @@
 							]
 						},
 						"description": "The detail of a single request, read through the id the sending saved. The callDateTime is filled in by now: the call scheduled above is what put it there, and finding it again in a later request shows that the appointment was written to the database, not only returned by the answer that created it."
+					}
+				},
+				{
+					"name": "Send a second support request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+									"pm.collectionVariables.set(\"supportRequestId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests?registrationId={{registrationId}}&description=The prototype still does not deploy and we would like a second opinion.",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "description",
+									"value": "The prototype still does not deploy and we would like a second opinion."
+								}
+							]
+						},
+						"description": "A second request from the same team, sent only to have a PENDING request for the next call to point at: the first one is already HANDLED, and a call cannot be scheduled twice on the same request. It sits at the end of the folder rather than next to the first one, and the position is a constraint and not a preference: \"List pending support requests\" asserts that nothing is waiting for a mentor and \"List team support requests\" reads the first element of the list, so both have to run while this second request does not exist yet. Moving this pair earlier to improve the narrative breaks those two assertions."
+					}
+				},
+				{
+					"name": "Schedule a call on a slot already taken",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 502\", () => pm.response.to.have.status(502));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"The calendar has no slot free on 2026-02-16T15:00\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId2}}/call?mentorId={{mentorId1}}&dateTime=2026-02-16T15:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId2}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-16T15:00:00"
+								}
+							]
+						},
+						"description": "The same slot, the same mentor and the same team as the call scheduled above: the calendar stub refuses it, CalendarAdapter turns the refusal into an ExternalServiceException and the platform answers 502 Bad Gateway. This is where the boundary with the external systems shows: the refusal comes from the calendar and not from the platform, and a 500 would have blamed the wrong side. It can only live here, while the hackathon is running: further down the collection the event is concluded and the check on the phase would refuse the call before the calendar is ever asked."
 					}
 				}
 			]
@@ -1676,6 +1759,44 @@
 			"description": "It goes last because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated, so everything that works on a participating team runs before it. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
+					"name": "Disqualify a team with no reason",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Reason of the disqualification is required\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/{{registrationId}}/disqualification?reason=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"{{registrationId}}",
+								"disqualification"
+							],
+							"query": [
+								{
+									"key": "reason",
+									"value": ""
+								}
+							]
+						},
+						"description": "The disqualification cannot be revoked and its reason is kept in the history of the event, so an empty motivation is refused. It runs before the disqualification that succeeds because afterwards the registration would already be out and the answer would be 409 instead of 400: RegistrationService checks the state of the event and of the registration first, and only then the reason, since a team that is already disqualified cannot be disqualified again whatever the motivation. The reason travels empty and not omitted: leaving the parameter out altogether is refused by Spring before the service is reached, and that body would carry no message."
+					}
+				},
+				{
 					"name": "Disqualify team",
 					"event": [
 						{
@@ -1710,6 +1831,44 @@
 							]
 						},
 						"description": "The disqualification marks the registration, it does not remove it: afterwards the registration is still there, with state DISQUALIFIED and the reason recorded, and so are the submissions and the history of the event. This is why it is a PUT on the registration and not a DELETE of it. The response is empty."
+					}
+				},
+				{
+					"name": "Disqualify the same team twice",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Registration \" + pm.collectionVariables.get(\"registrationId\") + \" is already disqualified\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/{{registrationId}}/disqualification?reason=Rule violation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"{{registrationId}}",
+								"disqualification"
+							],
+							"query": [
+								{
+									"key": "reason",
+									"value": "Rule violation"
+								}
+							]
+						},
+						"description": "The team is out already, so the second disqualification collides with the state of the registration: 409 Conflict and not 400, because the request is well formed and it is the resource that is already where the request wants to take it. It proves that checkNotAlreadyDisqualified is there, and it changes nothing: the registration keeps the state and the reason recorded by the request above."
 					}
 				}
 			]
@@ -2046,6 +2205,324 @@
 				}
 			],
 			"description": "The prize of the concluded hackathon is transferred to Null Pointers, the team proclaimed in 16. It is the last act of the life cycle and it comes after everything else because it is the only operation that needs a hackathon already concluded with a winner: before the proclamation there is nobody to pay. The transfer is delegated to the payment system, which is external to the platform and simulated by a stub; what HackHub keeps is the record of the payment, so that the same prize cannot be paid twice. The account credited is the iban Null Pointers was created with in 08 Registration, read here for the first time in the collection."
+		},
+		{
+			"name": "18 Error handling",
+			"description": "The negative cases, in a folder of their own at the very end so that the happy path above can be read without interruptions. Every request here is refused, so none of them changes the state of the platform and the folder can be run again as many times as wanted. It covers four of the five statuses of the error contract: 400, 401, 404 and 409. The 502 lives at the end of 11 Support requests and the two errors of the disqualification in 13 Disqualification, because each of them needs a phase of the event that no longer exists down here. The 500 is not covered at all: it answers an inconsistent state of the stored data, such as a hackathon without an organizer, which no endpoint of the platform is able to produce.",
+			"item": [
+				{
+					"name": "Pay a prize already paid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"The prize of hackathon \" + pm.collectionVariables.get(\"hackathonId\") + \" has already been paid\"));",
+									"pm.test(\"the body carries the five fields of an error\", () => pm.expect(pm.response.json()).to.have.all.keys(\"timestamp\", \"status\", \"error\", \"message\", \"path\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/prize?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"prize"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The prize of this hackathon was paid by 17 Prize payment, so paying it again collides with what has already happened: 409 Conflict. The shape of the body is asserted here once for the whole folder, because it is the same for every error the platform answers with."
+					}
+				},
+				{
+					"name": "Register a username already in use",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Username already in use: newcomer\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "The username was taken by 01 Auth. It is not a malformed request, it is a request that violates the uniqueness of the username: 409 Conflict. The user is not created, so running this again answers 409 again.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newcomer\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Get a hackathon that does not exist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Hackathon not found: 999999\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"999999"
+							]
+						},
+						"description": "A resource that was never created: 404 Not Found, and the message names the identifier that was asked for. Before this feature the same request answered 500 with a body that did not even say what was missing."
+					}
+				},
+				{
+					"name": "Get a submission that does not exist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Submission not found: 999999\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions",
+								"999999"
+							]
+						},
+						"description": "The same 404 on a different aggregate, to show that the answer does not depend on which repository was asked: every lookup that finds nothing ends in a NotFoundException."
+					}
+				},
+				{
+					"name": "Log in with a wrong password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 401\", () => pm.response.to.have.status(401));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Invalid credentials\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login?username=organizer1&password=wrong",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "organizer1"
+								},
+								{
+									"key": "password",
+									"value": "wrong"
+								}
+							]
+						},
+						"description": "The user exists and the request is well formed, only the password is not the right one: 401 Unauthorized and not 400, so that a client can tell a wrong password from a malformed parameter. The message stays deliberately vague and does not reveal whether it was the username or the password that did not match."
+					}
+				},
+				{
+					"name": "Disqualify a team of a concluded hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"A team cannot be disqualified from a concluded hackathon\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations/{{registrationId2}}/disqualification?reason=Too late",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations",
+								"{{registrationId2}}",
+								"disqualification"
+							],
+							"query": [
+								{
+									"key": "reason",
+									"value": "Too late"
+								}
+							]
+						},
+						"description": "The event is over and its winner has been proclaimed, so there is nobody left to exclude from anything: 400 Bad Request. It works on the winning registration, the one 13 Disqualification left untouched, and it leaves it untouched too."
+					}
+				},
+				{
+					"name": "Submit after the hackathon is over",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Submissions are accepted only while the hackathon is running\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId2}}&title=Too late&description=A prototype sent after the event has ended.&link=https://github.com/null-pointers/late",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId2}}"
+								},
+								{
+									"key": "title",
+									"value": "Too late"
+								},
+								{
+									"key": "description",
+									"value": "A prototype sent after the event has ended."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/null-pointers/late"
+								}
+							]
+						},
+						"description": "Submissions are accepted while the hackathon runs, and this one is concluded: 400 Bad Request. Nothing is stored, so the submission of the winning team stays the one that was evaluated."
+					}
+				},
+				{
+					"name": "Ask for support after the hackathon is over",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Support is available only while the hackathon is running\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests?registrationId={{registrationId2}}&description=Is there anybody still around to help us?",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId2}}"
+								},
+								{
+									"key": "description",
+									"value": "Is there anybody still around to help us?"
+								}
+							]
+						},
+						"description": "The mentors answer while the event runs, and this one is over: 400 Bad Request. It is the same rule as the request above, read on a different endpoint."
+					}
+				}
+			]
 		}
 	],
 	"variable": [
@@ -2115,6 +2592,10 @@
 		},
 		{
 			"key": "supportRequestId",
+			"value": ""
+		},
+		{
+			"key": "supportRequestId2",
 			"value": ""
 		},
 		{

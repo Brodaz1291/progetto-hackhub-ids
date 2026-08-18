@@ -1,7 +1,8 @@
 # Postman collection
 
-`HackHub.postman_collection.json` covers the happy paths of the REST API exposed by the
-project. It is meant to be run from start to finish without typing any data by hand.
+`HackHub.postman_collection.json` covers the REST API exposed by the project: the happy path
+from end to end, and the requests that are meant to be refused, with the status each error
+answers with. It is meant to be run from start to finish without typing any data by hand.
 
 ## Importing the collection
 
@@ -44,13 +45,14 @@ respects this order.
 | `08 Registration` | Registers Byte Runners in the hackathon, then creates Null Pointers with `member2` and registers it too, saving the ids in `registrationId`, `teamId2` and `registrationId2` |
 | `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts, which takes the event from `REGISTRATION` to `RUNNING` (see below) |
 | `10 Submissions` | Uploads the submission of the team, then reads it back from the list reserved to the staff of the hackathon and one by one through its id |
-| `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id |
+| `11 Support requests` | Sends a support request and plans the call a mentor holds in answer to it, then reads it back from the list the mentors work on, from the list of the team, and one by one through its id; it closes with a second request whose call asks for the slot already booked, which the calendar refuses |
 | `12 Reports` | A mentor reports the team to the organizer, who reads the reports of the hackathon back: the whole list and the detail of one of them |
-| `13 Disqualification` | Disqualifies the registration saved by `08`, closing the participation of the team |
+| `13 Disqualification` | Refuses a disqualification with no reason, then disqualifies the registration saved by `08`, closing the participation of the team, then refuses the same disqualification a second time |
 | `14 Clock` | Moves the time past the end of the hackathon, which takes the event from `RUNNING` to `EVALUATION` |
 | `15 Evaluation` | Reads the submissions left to evaluate, scores the one of the team still in the running and scores it again, replacing the first judgment |
 | `16 Proclamation` | Proclaims `Null Pointers` the winner, which concludes the hackathon, then reads it back to see the terminal phase hold |
 | `17 Prize payment` | Pays the prize of the concluded hackathon to `Null Pointers`, transferring it to the iban the team was created with |
+| `18 Error handling` | The requests that are meant to be refused, each one showing the status a domain error answers with: `400`, `401`, `404` and `409` |
 
 No id is written by hand: every request that creates something saves the returned `id` in a
 collection variable through a script in its **Tests** tab, and the following requests refer to
@@ -84,9 +86,12 @@ they work on the hackathon and on the team left in the running, not on the one t
 call in `11 Support requests` is reserved on an external calendar the platform reaches through
 an adapter, and in this project that calendar is simulated: it remembers the slots it has
 already given out and refuses a second event on the same people at the same instant, as a real
-one would. The call therefore books `2026-02-16T15:00` and no other request may reuse it — a
-folder added later needs an instant of its own, or the booking comes back refused. The agenda
-lives as long as the application does, so it is emptied by the same restart the database needs.
+one would. The call therefore books `2026-02-16T15:00`, and the request that closes
+`11 Support requests` asks for that very instant a second time on purpose: same slot, same
+mentor, same team, so the calendar refuses it and the platform answers `502`. Apart from that
+one, no other request may reuse it — a folder added later needs an instant of its own, or the
+booking comes back refused. The agenda lives as long as the application does, so it is emptied
+by the same restart the database needs.
 
 **The prize is paid to the iban the winning team was created with.** The transfer of `17 Prize
 payment` goes through an adapter as well, and the payment system behind it is simulated like the
@@ -152,13 +157,50 @@ time of its clock, not with the real one.
 created at all, so the paths do not answer. They are there to let a demonstration walk through
 the whole life cycle of an event in a single run, without waiting for the real dates.
 
-## What the collection does not cover yet
+## The requests that are meant to be refused
 
-**The requests that are meant to be refused.** Every request here is a happy path. The access to
-the submissions is granted to the staff of the hackathon alone, but the attempt of somebody who
-is not staff is not among them: until the errors of the API answer with a status of their own, a
-request like that could only assert a `500`, which says nothing about why it was turned away.
-The error cases are collected in a folder of their own once that is in place.
+Every domain error of the platform answers with a status of its own and a body that carries the
+message of the exception. The collection shows them where each one can be shown.
+
+`18 Error handling` sits at the very end, after the happy path is over, and covers four of the
+five statuses:
+
+| Status | What it answers | Where the collection shows it |
+|---|---|---|
+| `400 Bad Request` | data that does not pass a check of the domain | a disqualification, a submission and a support request on a hackathon that is over |
+| `401 Unauthorized` | credentials that do not match | a login with the wrong password |
+| `404 Not Found` | a resource that does not exist | a hackathon and a submission asked for by an id nobody ever created |
+| `409 Conflict` | a request that collides with what has already happened | a prize paid twice and a username already in use |
+
+Every request of that folder is refused, so none of them changes anything and the folder can be
+run again as many times as wanted. The body of an error carries `timestamp`, `status`, `error`,
+`message` and `path`, and the folder asserts that shape once, on its first request, because it is
+the same for every error the platform answers with.
+
+Three cases cannot live down there, because each of them needs a phase of the event that the
+tail of the collection no longer has. They sit inside the folder that still has it:
+
+- **`502 Bad Gateway`**, at the end of `11 Support requests`: the call that asks for a slot the
+  calendar has already given out. It has to run while the hackathon is `RUNNING`, otherwise the
+  check on the phase refuses the call before the calendar is ever asked. It is the one request
+  that shows the boundary with the external systems: the refusal comes from the calendar, not
+  from the platform, and a `500` would have blamed the wrong side.
+- **`400` on a disqualification with no reason**, at the head of `13 Disqualification`: it has to
+  run before the disqualification that succeeds, because afterwards the registration would
+  already be out and the answer would be `409`.
+- **`409` on the same disqualification repeated**, at the foot of the same folder, for the
+  opposite reason.
+
+The position of the two requests at the end of `11 Support requests` is a constraint and not a
+preference: `List pending support requests` asserts that nothing is waiting for a mentor and
+`List team support requests` reads the first element of the list, so both have to run while the
+second request does not exist yet. Moving the pair earlier to improve the narrative breaks those
+two assertions.
+
+**`500 Internal Server Error` is not covered.** It answers an inconsistent state of the stored
+data — a hackathon whose organizer is missing, for instance — which no endpoint of the
+platform is able to produce: no request can bring it about, and forcing one would mean writing
+the inconsistency straight into the database.
 
 ## The database is emptied at every restart
 
