@@ -122,6 +122,7 @@ The identity of the caller travels as an explicit parameter (`organizerId`, `use
 | POST | `/{teamId}/invitations` | Invites a user into the team |
 | GET | `/invitations` | Lists the invitations a user has received |
 | PUT | `/invitations/{invitationId}` | Accepts an invitation |
+| PUT | `/invitations/{invitationId}/refusal` | Refuses an invitation, which creates no membership |
 
 ### Registrations — `/api/registrations`
 
