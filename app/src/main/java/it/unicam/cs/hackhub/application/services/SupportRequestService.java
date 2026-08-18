@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Registration;
 import it.unicam.cs.hackhub.model.entities.SupportRequest;
@@ -33,13 +35,13 @@ public class SupportRequestService {
      */
     public SupportRequest sendSupportRequest(Long registrationId, String description) {
         Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
-            throw new IllegalArgumentException("Support is available only while the hackathon is running");
+            throw new ValidationException("Support is available only while the hackathon is running");
         }
         if (!checkDescription(description)) {
-            throw new IllegalArgumentException("Description of the support request is required");
+            throw new ValidationException("Description of the support request is required");
         }
 
         SupportRequest supportRequest = new SupportRequest(registration, description, SupportRequestState.PENDING);
@@ -74,7 +76,7 @@ public class SupportRequestService {
 
     public SupportRequest getSupportRequest(Long supportRequestId) {
         return supportRequestRepository.findById(supportRequestId)
-                .orElseThrow(() -> new IllegalArgumentException("Support request not found: " + supportRequestId));
+                .orElseThrow(() -> new NotFoundException("Support request not found: " + supportRequestId));
     }
 
     /**

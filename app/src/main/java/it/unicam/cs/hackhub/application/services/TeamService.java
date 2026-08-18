@@ -1,5 +1,8 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.controllers.requests.CreateTeamRequest;
 import it.unicam.cs.hackhub.model.entities.Participation;
 import it.unicam.cs.hackhub.model.entities.Registration;
@@ -45,12 +48,12 @@ public class TeamService {
     public Team createTeam(CreateTeamRequest req, Long creatorId) {
         String name = req.getName();
         if (!checkName(name)) {
-            throw new IllegalArgumentException("Invalid or already used team name: " + name);
+            throw new ValidationException("Invalid or already used team name: " + name);
         }
         User creator = userRepository.findById(creatorId)
-                .orElseThrow(() -> new IllegalArgumentException("Creator not found: " + creatorId));
+                .orElseThrow(() -> new NotFoundException("Creator not found: " + creatorId));
         if (!checkNoActiveParticipation(creator)) {
-            throw new IllegalArgumentException("User already takes part in something else: " + creatorId);
+            throw new ConflictException("User already takes part in something else: " + creatorId);
         }
 
         Team newTeam = new Team(name, req.getIban());
@@ -92,7 +95,7 @@ public class TeamService {
      */
     public TeamMember getTeamMember(Long userId) {
         return teamMemberRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of any team: " + userId));
+                .orElseThrow(() -> new NotFoundException("User is not a member of any team: " + userId));
     }
 
     /**
@@ -103,10 +106,10 @@ public class TeamService {
     @Transactional
     public void leaveTeam(Long userId) {
         TeamMember leavingMember = teamMemberRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of any team: " + userId));
+                .orElseThrow(() -> new NotFoundException("User is not a member of any team: " + userId));
         Team team = leavingMember.getTeam();
         if (!checkNoOngoingParticipation(team)) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "A team cannot be left while it takes part in a hackathon in progress: " + team.getId());
         }
 

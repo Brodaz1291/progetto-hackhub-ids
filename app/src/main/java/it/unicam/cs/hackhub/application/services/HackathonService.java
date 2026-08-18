@@ -1,5 +1,8 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
 import it.unicam.cs.hackhub.controllers.requests.UpdateHackathonRequest;
 import it.unicam.cs.hackhub.designPatterns.HackathonBuilder;
@@ -70,7 +73,7 @@ public class HackathonService {
 
     public Hackathon getHackathon(Long hackathonId) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         return hackathon;
     }
@@ -80,15 +83,15 @@ public class HackathonService {
      */
     public Hackathon createHackathon(CreateHackathonRequest req, Long organizerId) {
         if (!checkInformation(req)) {
-            throw new IllegalArgumentException("Invalid hackathon information");
+            throw new ValidationException("Invalid hackathon information");
         }
         User organizer = userRepository.findById(organizerId)
-                .orElseThrow(() -> new IllegalArgumentException("Organizer not found: " + organizerId));
+                .orElseThrow(() -> new NotFoundException("Organizer not found: " + organizerId));
         User judge = userRepository.findById(req.getJudgeId())
-                .orElseThrow(() -> new IllegalArgumentException("Judge not found: " + req.getJudgeId()));
+                .orElseThrow(() -> new NotFoundException("Judge not found: " + req.getJudgeId()));
         List<User> mentors = userRepository.findAllById(req.getMentorIds());
         if (mentors.size() != req.getMentorIds().size()) {
-            throw new IllegalArgumentException("Unknown or duplicated mentors: " + req.getMentorIds());
+            throw new ValidationException("Unknown or duplicated mentors: " + req.getMentorIds());
         }
 
         // the builder is prototype-scoped: a fresh instance per creation, since it keeps
@@ -138,15 +141,15 @@ public class HackathonService {
      */
     public Hackathon updateHackathon(Long hackathonId, UpdateHackathonRequest req) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the data: once registrations are closed the
         // information is settled with the enrolled teams, so validating it is pointless
         if (!checkHackathonInRegistration(hackathon)) {
-            throw new IllegalArgumentException("A hackathon can be updated only during its registration phase");
+            throw new ValidationException("A hackathon can be updated only during its registration phase");
         }
         if (!checkUpdateInformation(req)) {
-            throw new IllegalArgumentException("Invalid hackathon update information");
+            throw new ValidationException("Invalid hackathon update information");
         }
         applyChanges(hackathon, req);
         return hackathonRepository.save(hackathon);
@@ -188,12 +191,12 @@ public class HackathonService {
     @Transactional
     public Mentor addMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+                .orElseThrow(() -> new NotFoundException("User not found: " + username));
         if (!checkNoActiveParticipation(user)) {
-            throw new IllegalArgumentException("User already takes part in something else: " + username);
+            throw new ConflictException("User already takes part in something else: " + username);
         }
 
         Mentor mentor = new Mentor(user, hackathon);
@@ -213,10 +216,10 @@ public class HackathonService {
     @Transactional
     public void removeMentor(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+                .orElseThrow(() -> new NotFoundException("User not found: " + username));
         // looking the mentor up inside the staff of this hackathon makes both the type and
         // the membership checks implicit
         Mentor mentor = hackathon.getStaff().stream()
@@ -224,10 +227,10 @@ public class HackathonService {
                 .map(Mentor.class::cast)
                 .filter(staffMentor -> staffMentor.getUser().getId().equals(user.getId()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ValidationException(
                         username + " is not a mentor of hackathon " + hackathonId));
         if (!checkNotLastMentor(hackathon)) {
-            throw new IllegalArgumentException("The last mentor cannot be removed, only replaced");
+            throw new ValidationException("The last mentor cannot be removed, only replaced");
         }
 
         // the notice goes out before the removal: afterwards the mentor no longer exists
@@ -246,17 +249,17 @@ public class HackathonService {
     @Transactional
     public Judge replaceJudge(Long hackathonId, String username) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         // the phase is checked before the user: once the evaluation is under way the
         // replacement is impossible anyway, whoever the candidate is
         if (!checkEvaluationNotStarted(hackathon)) {
-            throw new IllegalArgumentException("The judge cannot be replaced once the evaluation has started");
+            throw new ValidationException("The judge cannot be replaced once the evaluation has started");
         }
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+                .orElseThrow(() -> new NotFoundException("User not found: " + username));
         if (!checkNoActiveParticipation(user)) {
-            throw new IllegalArgumentException("User already takes part in something else: " + username);
+            throw new ConflictException("User already takes part in something else: " + username);
         }
         Judge oldJudge = hackathon.getStaff().stream()
                 .filter(Judge.class::isInstance)
@@ -318,20 +321,20 @@ public class HackathonService {
     @Transactional
     public Hackathon proclaimWinner(Long hackathonId, Long registrationId) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         if (!checkHackathonInEvaluation(hackathon)) {
-            throw new IllegalArgumentException("The winner can be proclaimed only during the evaluation phase");
+            throw new ValidationException("The winner can be proclaimed only during the evaluation phase");
         }
         if (!checkAllSubmissionsEvaluated(hackathon)) {
-            throw new IllegalArgumentException("The winner can be proclaimed only once every submission has been evaluated");
+            throw new ValidationException("The winner can be proclaimed only once every submission has been evaluated");
         }
         if (!checkHasEvaluatedSubmissions(hackathon)) {
             applyConclusion(hackathon, null);
             return hackathonRepository.save(hackathon);
         }
         if (registrationId == null) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "Hackathon " + hackathonId + " has evaluated submissions: the winner has to be selected");
         }
 
@@ -339,7 +342,7 @@ public class HackathonService {
                 .map(Submission::getRegistration)
                 .filter(registration -> registration.getId().equals(registrationId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Registration " + registrationId
+                .orElseThrow(() -> new ValidationException("Registration " + registrationId
                         + " is not among the evaluated submissions of hackathon " + hackathonId));
         applyConclusion(hackathon, winner);
         Hackathon concludedHackathon = hackathonRepository.save(hackathon);

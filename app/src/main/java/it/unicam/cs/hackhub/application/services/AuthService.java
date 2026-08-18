@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.AuthenticationException;
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
 import it.unicam.cs.hackhub.controllers.requests.RegisterRequest;
 import it.unicam.cs.hackhub.model.entities.User;
 import it.unicam.cs.hackhub.model.repositories.UserRepository;
@@ -30,7 +32,7 @@ public class AuthService {
     public User register(RegisterRequest req) {
         String username = req.getUsername();
         if (!checkUsernameAvailable(username)) {
-            throw new IllegalArgumentException("Username already in use: " + username);
+            throw new ConflictException("Username already in use: " + username);
         }
         User newUser = new User(username, req.getPassword());
         return userRepository.save(newUser);
@@ -50,11 +52,11 @@ public class AuthService {
     public User login(String username, String password) {
         Optional<User> foundUser = userRepository.findByUsername(username);
         if (foundUser.isEmpty()) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
         }
         User user = foundUser.get();
         if (!checkCredentials(user, password)) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
         }
         return user;
     }

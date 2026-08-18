@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Evaluation;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Registration;
@@ -33,18 +35,18 @@ public class EvaluationService {
     @Transactional
     public Evaluation evaluateSubmission(Long submissionId, int score, String judgment) {
         Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
+                .orElseThrow(() -> new NotFoundException("Submission not found: " + submissionId));
         Registration registration = submission.getRegistration();
         hackathonLifecycle.refreshState(registration.getHackathon());
 
         if (!checkHackathonInEvaluation(registration.getHackathon())) {
-            throw new IllegalArgumentException("Submissions can be evaluated only while the hackathon is in evaluation");
+            throw new ValidationException("Submissions can be evaluated only while the hackathon is in evaluation");
         }
         if (!checkNotDisqualified(registration)) {
-            throw new IllegalArgumentException("The submission of a disqualified team cannot be evaluated");
+            throw new ValidationException("The submission of a disqualified team cannot be evaluated");
         }
         if (!checkScore(score)) {
-            throw new IllegalArgumentException("The score must be between " + MIN_SCORE + " and " + MAX_SCORE);
+            throw new ValidationException("The score must be between " + MIN_SCORE + " and " + MAX_SCORE);
         }
 
         Evaluation evaluation = submission.getEvaluation();

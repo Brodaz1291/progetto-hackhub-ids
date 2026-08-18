@@ -1,5 +1,8 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Registration;
 import it.unicam.cs.hackhub.model.entities.Team;
@@ -10,6 +13,7 @@ import it.unicam.cs.hackhub.model.repositories.RegistrationRepository;
 import it.unicam.cs.hackhub.model.repositories.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -44,15 +48,15 @@ public class RegistrationService {
     @Transactional
     public Registration registerTeam(Long hackathonId, Long teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+                .orElseThrow(() -> new NotFoundException("Team not found: " + teamId));
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         hackathonLifecycle.refreshState(hackathon);
         if (isTeamBusy(team)) {
-            throw new IllegalArgumentException("Team " + teamId + " is already taking part in a hackathon");
+            throw new ConflictException("Team " + teamId + " is already taking part in a hackathon");
         }
         if (!checkRegistrationConditions(team, hackathon)) {
-            throw new IllegalArgumentException("Registration conditions not satisfied for hackathon " + hackathonId);
+            throw new ValidationException("Registration conditions not satisfied for hackathon " + hackathonId);
         }
 
         Registration registration = new Registration(LocalDateTime.now(clock), RegistrationState.REGISTERED);
@@ -91,12 +95,15 @@ public class RegistrationService {
     @Transactional
     public void disqualifyTeam(Long registrationId, String reason) {
         Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         if (!checkHackathonNotConcluded(registration.getHackathon())) {
-            throw new IllegalArgumentException("A team cannot be disqualified from a concluded hackathon");
+            throw new ValidationException("A team cannot be disqualified from a concluded hackathon");
         }
         if (!checkNotAlreadyDisqualified(registration)) {
-            throw new IllegalArgumentException("Registration " + registrationId + " is already disqualified");
+            throw new ConflictException("Registration " + registrationId + " is already disqualified");
+        }
+        if (!checkReason(reason)) {
+            throw new ValidationException("Reason of the disqualification is required");
         }
 
         applyDisqualification(registration, reason);
@@ -115,6 +122,18 @@ public class RegistrationService {
 
     private boolean checkNotAlreadyDisqualified(Registration registration) {
         return registration.getState() != RegistrationState.DISQUALIFIED;
+    }
+
+    /**
+     * The disqualification cannot be revoked and its reason is kept in the history of the
+     * event: an empty motivation would leave the exclusion of a team unexplained forever.
+     *
+     * It is the last check of disqualifyTeam on purpose: if the hackathon is concluded or the
+     * team is already disqualified the operation is impossible whatever the motivation, and
+     * complaining about the reason first would point at the wrong problem.
+     */
+    private boolean checkReason(String reason) {
+        return StringUtils.hasText(reason);
     }
 
     /**

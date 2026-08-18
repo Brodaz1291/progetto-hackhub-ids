@@ -1,5 +1,8 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.designPatterns.CallScheduler;
 import it.unicam.cs.hackhub.model.entities.Call;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
@@ -56,18 +59,18 @@ public class CallService {
     @Transactional
     public Call scheduleCall(Long supportRequestId, Long mentorId, LocalDateTime dateTime) {
         SupportRequest supportRequest = supportRequestRepository.findById(supportRequestId)
-                .orElseThrow(() -> new IllegalArgumentException("Support request not found: " + supportRequestId));
+                .orElseThrow(() -> new NotFoundException("Support request not found: " + supportRequestId));
         Hackathon hackathon = supportRequest.getRegistration().getHackathon();
         hackathonLifecycle.refreshState(hackathon);
         Mentor mentor = findMentor(hackathon, mentorId);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new IllegalArgumentException("A call can be scheduled only while the hackathon is running");
+            throw new ValidationException("A call can be scheduled only while the hackathon is running");
         }
         if (!checkSlot(dateTime)) {
-            throw new IllegalArgumentException("The call must be planned on a future instant: " + dateTime);
+            throw new ValidationException("The call must be planned on a future instant: " + dateTime);
         }
         if (!checkRequestIsPending(supportRequest)) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Support request " + supportRequestId + " has already been taken over by a mentor");
         }
 
@@ -94,7 +97,7 @@ public class CallService {
                 .map(Mentor.class::cast)
                 .filter(mentor -> mentor.getUser().getId().equals(mentorId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ValidationException(
                         "User " + mentorId + " is not a mentor of hackathon " + hackathon.getId()));
     }
 

@@ -1,5 +1,8 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.designPatterns.PaymentProcessor;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Payment;
@@ -51,16 +54,16 @@ public class PaymentService {
     @Transactional
     public Payment payPrize(Long hackathonId) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+                .orElseThrow(() -> new NotFoundException("Hackathon not found: " + hackathonId));
         if (!checkHackathonConcluded(hackathon)) {
-            throw new IllegalArgumentException("The prize can be paid only after the winner has been proclaimed");
+            throw new ValidationException("The prize can be paid only after the winner has been proclaimed");
         }
 
         Registration winner = registrationRepository.findWinnerByHackathonId(hackathonId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         "Hackathon " + hackathonId + " was concluded with no winner proclaimed: there is no prize to pay"));
         if (!checkNotAlreadyPaid(winner)) {
-            throw new IllegalArgumentException("The prize of hackathon " + hackathonId + " has already been paid");
+            throw new ConflictException("The prize of hackathon " + hackathonId + " has already been paid");
         }
 
         Team team = winner.getTeam();

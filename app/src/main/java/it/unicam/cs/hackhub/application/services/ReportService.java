@@ -1,5 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
+import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Organizer;
 import it.unicam.cs.hackhub.model.entities.Registration;
@@ -45,14 +47,14 @@ public class ReportService {
     @Transactional
     public Report reportTeam(Long registrationId, String reason) {
         Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new IllegalArgumentException("Registration not found: " + registrationId));
+                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         Hackathon hackathon = registration.getHackathon();
         hackathonLifecycle.refreshState(hackathon);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new IllegalArgumentException("A team can be reported only while the hackathon is running");
+            throw new ValidationException("A team can be reported only while the hackathon is running");
         }
         if (!checkReason(reason)) {
-            throw new IllegalArgumentException("Reason of the report is required");
+            throw new ValidationException("Reason of the report is required");
         }
 
         Report report = new Report(registration, reason, LocalDateTime.now(clock));
@@ -89,6 +91,6 @@ public class ReportService {
 
     public Report getReport(Long reportId) {
         return reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("Report not found: " + reportId));
+                .orElseThrow(() -> new NotFoundException("Report not found: " + reportId));
     }
 }
