@@ -71,11 +71,9 @@ public class SubmissionController {
      *
      * It is read again because the association goes from the submission to its evaluation
      * only, and that is on purpose: an evaluation makes no sense detached from the elaborate
-     * it judges, which is the one owning it. Where the two ends are both navigable, as
-     * between a support request and its call, it is because someone really starts from one to
-     * reach the other: the team consulting a request has to see whether an appointment
-     * answers it. Nobody starts from an evaluation looking for its submission, so the second
-     * reading is the price of keeping the association pointing the only way it is travelled.
+     * it judges, which is the one owning it. Nobody starts from an evaluation looking for its
+     * submission, so the second reading is the price of keeping the association pointing the
+     * only way it is travelled.
      */
     @PostMapping("/{submissionId}/evaluation")
     public SubmissionDTO evaluateSubmission(@PathVariable Long submissionId,

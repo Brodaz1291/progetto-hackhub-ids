@@ -33,9 +33,6 @@ public class SupportRequestController {
         this.dtoMapper = dtoMapper;
     }
 
-    /**
-     * Sends a support request to the mentors of the hackathon the team is registered to.
-     */
     @PostMapping
     public SupportRequestDTO sendSupportRequest(@RequestParam Long registrationId,
                                                 @RequestParam String description) {
@@ -43,9 +40,6 @@ public class SupportRequestController {
         return dtoMapper.toDTO(supportRequest);
     }
 
-    /**
-     * Returns the requests of a hackathon a mentor still has to take over.
-     */
     @GetMapping("/pending")
     public List<SupportRequestDTO> getPendingSupportRequests(@RequestParam Long hackathonId) {
         List<SupportRequest> pendingRequests = supportRequestService.getPendingRequests(hackathonId);
@@ -54,9 +48,6 @@ public class SupportRequestController {
                 .toList();
     }
 
-    /**
-     * Returns the requests sent by a team, with the state each one is in.
-     */
     @GetMapping
     public List<SupportRequestDTO> getTeamSupportRequests(@RequestParam Long registrationId) {
         List<SupportRequest> teamRequests = supportRequestService.getTeamRequests(registrationId);

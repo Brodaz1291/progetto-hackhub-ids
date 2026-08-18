@@ -76,9 +76,6 @@ public class HackathonController {
         return dtoMapper.toDTO(createdHackathon);
     }
 
-    /**
-     * Replaces the information of a hackathon still open to registrations.
-     */
     @PutMapping("/{hackathonId}")
     public HackathonDTO updateHackathon(@PathVariable Long hackathonId,
                                         @RequestBody UpdateHackathonRequest req) {
@@ -87,8 +84,6 @@ public class HackathonController {
     }
 
     /**
-     * Assigns a further mentor to a hackathon.
-     *
      * NOTE: the response describes the user who became a mentor, not the participation:
      * what the client needs to know is who now mentors the hackathon.
      */
@@ -98,17 +93,11 @@ public class HackathonController {
         return dtoMapper.toDTO(mentor.getUser());
     }
 
-    /**
-     * Removes a mentor from a hackathon.
-     */
     @DeleteMapping("/{hackathonId}/mentors")
     public void removeMentor(@PathVariable Long hackathonId, @RequestParam String username) {
         hackathonService.removeMentor(hackathonId, username);
     }
 
-    /**
-     * Replaces the judge of a hackathon with another user.
-     */
     @PutMapping("/{hackathonId}/judge")
     public UserDTO replaceJudge(@PathVariable Long hackathonId, @RequestParam String username) {
         Judge judge = hackathonService.replaceJudge(hackathonId, username);
@@ -116,8 +105,6 @@ public class HackathonController {
     }
 
     /**
-     * Proclaims the winning team of a hackathon, which concludes it.
-     *
      * NOTE: the registration is optional because a hackathon where no submission has been
      * evaluated is concluded without a winner, and there the client has nobody to name. The
      * response describes the concluded hackathon since that is the only way to tell the two
