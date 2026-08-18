@@ -661,7 +661,7 @@
 		},
 		{
 			"name": "05 Invitations",
-			"description": "member1 invites member2 into the team created in 03, and member2 accepts. The three requests go through TeamFacade, which coordinates the state of the invitation with the membership.",
+			"description": "member1 invites member2 into the team created in 03, and member2 accepts. A second invitation goes to newcomer, the user registered in 01 Auth, who refuses it: both the answers an invitation can get are covered here. The first three requests go through TeamFacade, which coordinates the state of the invitation with the membership; the refusal does not, because it creates no membership and notifies nobody, so InvitationService is the only service it touches.",
 			"item": [
 				{
 					"name": "Send invitation",
@@ -709,6 +709,51 @@
 					}
 				},
 				{
+					"name": "Send a second invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
+									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
+									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+									"pm.collectionVariables.set(\"invitationId2\", pm.response.json().id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/{{teamId}}/invitations?username=newcomer&senderId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"{{teamId}}",
+								"invitations"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "newcomer"
+								},
+								{
+									"key": "senderId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "newcomer takes part in nothing: registered in 01 Auth and never enrolled anywhere since, it is the one user left free at this point of the sequence, as 04 Staff has taken member3 as judge and everybody else is either staff of the hackathon or already in the team. This invitation is left unanswered on purpose: it is what the refusal closing the folder answers to."
+					}
+				},
+				{
 					"name": "Get invitations",
 					"event": [
 						{
@@ -717,7 +762,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"member2 has at least one invitation\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);",
+									"pm.test(\"member2 has one invitation, the one sent to newcomer left aside\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.has.lengthOf(1));",
 									"pm.test(\"the invitation comes from the right team\", () => pm.expect(pm.response.json()[0].teamName).to.eql(\"Byte Runners\"));"
 								]
 							}
@@ -782,6 +827,46 @@
 							]
 						},
 						"description": "An invitation is answered by its recipient only, so the user asking for the acceptance is the same one the invitation is addressed to. Beyond the state of the invitation, the request creates the membership of member2 in the team."
+					}
+				},
+				{
+					"name": "Refuse the invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the invitation refused is the second one\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"invitationId2\"))));",
+									"pm.test(\"the invitation is declined\", () => pm.expect(pm.response.json().status).to.eql(\"DECLINED\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/invitations/{{invitationId2}}/refusal?userId={{newUserId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"invitations",
+								"{{invitationId2}}",
+								"refusal"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{newUserId}}"
+								}
+							]
+						},
+						"description": "The refusal is the other answer an invitation can get, and the only operation that ever writes DECLINED. The path carries a sub-resource because the acceptance already answers PUT on the invitation itself. Unlike the acceptance it does not go through TeamFacade, and it checks no participation of the user: refusing creates no membership, so an invited user who has joined something else in the meantime must still be able to close what is left pending."
 					}
 				}
 			]
@@ -2572,6 +2657,10 @@
 		},
 		{
 			"key": "invitationId",
+			"value": ""
+		},
+		{
+			"key": "invitationId2",
 			"value": ""
 		},
 		{
