@@ -39,7 +39,7 @@ respects this order.
 | `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, then updates its information |
 | `03 Team` | Creates a team with `member1` as its first member |
 | `04 Staff` | Adds `member3` as a mentor of the hackathon and removes them, then makes them its judge in place of `judge1`, moving `judgeId` onto the new judge |
-| `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts |
+| `05 Invitations` | `member1` invites `member2` into the team, who reads the invitations received and accepts; a second invitation goes to `newcomer`, who refuses it |
 | `06 Consultation` | Reads the hackathons back: the whole list with its staff, the ones open to registrations, the public projection a visitor sees, and the detail of one of them |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers Byte Runners in the hackathon, then creates Null Pointers with `member2` and registers it too, saving the ids in `registrationId`, `teamId2` and `registrationId2` |
@@ -65,6 +65,16 @@ thing at a time: creating a hackathon makes `organizer1` its organizer, `judge1`
 `mentor1`/`mentor2` its mentors, and from that moment on none of them can join a team. Of the
 seeded users only `member1`, `member2` and `member3` are still free when `03 Team` runs, so the
 team is created by `member1`.
+
+**The invitation that gets refused is addressed to `newcomer`.** Sending an invitation requires
+the invited user to be free, and by `05 Invitations` almost nobody is: `organizer1`, `mentor1` and
+`mentor2` are staff of the hackathon, `member3` has become its judge in `04 Staff`, and `member1`
+is in the team it would be invited into. `member2` is free there, but it is the one that accepts,
+and it cannot serve twice: a user already in a team can no longer be invited. `newcomer`, the user
+registered in `01 Auth`, is the one that takes part in nothing for the whole run, so the second
+invitation goes to it and stays pending until the refusal that closes the folder. Being addressed
+to a different user is also what keeps the two invitations apart: `Get invitations` reads the list
+of `member2`, which holds its own invitation and nothing else.
 
 **The dates of the hackathon are in February 2026.** What the application checks at creation is
 that they are coherent with one another — `registrationDeadline <= startDate < endDate` —
