@@ -13,6 +13,7 @@ import it.unicam.cs.hackhub.model.repositories.RegistrationRepository;
 import it.unicam.cs.hackhub.model.repositories.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -101,6 +102,9 @@ public class RegistrationService {
         if (!checkNotAlreadyDisqualified(registration)) {
             throw new ConflictException("Registration " + registrationId + " is already disqualified");
         }
+        if (!checkReason(reason)) {
+            throw new ValidationException("Reason of the disqualification is required");
+        }
 
         applyDisqualification(registration, reason);
         registrationRepository.save(registration);
@@ -118,6 +122,18 @@ public class RegistrationService {
 
     private boolean checkNotAlreadyDisqualified(Registration registration) {
         return registration.getState() != RegistrationState.DISQUALIFIED;
+    }
+
+    /**
+     * The disqualification cannot be revoked and its reason is kept in the history of the
+     * event: an empty motivation would leave the exclusion of a team unexplained forever.
+     *
+     * It is the last check of disqualifyTeam on purpose: if the hackathon is concluded or the
+     * team is already disqualified the operation is impossible whatever the motivation, and
+     * complaining about the reason first would point at the wrong problem.
+     */
+    private boolean checkReason(String reason) {
+        return StringUtils.hasText(reason);
     }
 
     /**
