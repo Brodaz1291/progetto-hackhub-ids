@@ -6,7 +6,7 @@ import it.unicam.cs.hackhub.application.mappers.DTOMapper;
 import it.unicam.cs.hackhub.application.services.InvitationService;
 import it.unicam.cs.hackhub.application.services.TeamService;
 import it.unicam.cs.hackhub.controllers.requests.CreateTeamRequest;
-import it.unicam.cs.hackhub.designPatterns.TeamFacade;
+import it.unicam.cs.hackhub.designPatterns.facade.TeamFacade;
 import it.unicam.cs.hackhub.model.entities.Invitation;
 import it.unicam.cs.hackhub.model.entities.Team;
 import org.springframework.web.bind.annotation.DeleteMapping;

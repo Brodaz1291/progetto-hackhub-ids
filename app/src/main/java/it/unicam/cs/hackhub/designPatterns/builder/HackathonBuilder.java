@@ -1,4 +1,4 @@
-package it.unicam.cs.hackhub.designPatterns;
+package it.unicam.cs.hackhub.designPatterns.builder;
 
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
 import it.unicam.cs.hackhub.model.entities.Hackathon;

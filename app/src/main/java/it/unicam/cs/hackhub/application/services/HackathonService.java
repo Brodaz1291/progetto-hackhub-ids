@@ -5,7 +5,7 @@ import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.controllers.requests.CreateHackathonRequest;
 import it.unicam.cs.hackhub.controllers.requests.UpdateHackathonRequest;
-import it.unicam.cs.hackhub.designPatterns.HackathonBuilder;
+import it.unicam.cs.hackhub.designPatterns.builder.HackathonBuilder;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Judge;
 import it.unicam.cs.hackhub.model.entities.Mentor;

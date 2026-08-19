@@ -1,4 +1,4 @@
-package it.unicam.cs.hackhub.designPatterns;
+package it.unicam.cs.hackhub.designPatterns.adapter;
 
 import it.unicam.cs.hackhub.model.entities.Mentor;
 import it.unicam.cs.hackhub.model.entities.Team;
