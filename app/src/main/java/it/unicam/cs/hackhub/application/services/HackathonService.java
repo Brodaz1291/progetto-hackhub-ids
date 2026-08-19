@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class HackathonService {
@@ -92,6 +93,17 @@ public class HackathonService {
         List<User> mentors = userRepository.findAllById(req.getMentorIds());
         if (mentors.size() != req.getMentorIds().size()) {
             throw new ValidationException("Unknown or duplicated mentors: " + req.getMentorIds());
+        }
+
+        // the whole staff is checked before anything is built: assigning somebody already busy
+        // would create here a participation that addMentor and replaceJudge would refuse a
+        // moment later
+        List<User> assignedStaff = Stream.concat(Stream.of(organizer, judge), mentors.stream()).toList();
+        for (User staffMember : assignedStaff) {
+            if (!checkNoActiveParticipation(staffMember)) {
+                throw new ConflictException(
+                        "User already takes part in something else: " + staffMember.getUsername());
+            }
         }
 
         // the builder is prototype-scoped: a fresh instance per creation, since it keeps
