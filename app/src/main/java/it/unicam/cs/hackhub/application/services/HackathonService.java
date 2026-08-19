@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class HackathonService {
@@ -85,6 +86,10 @@ public class HackathonService {
         if (!checkInformation(req)) {
             throw new ValidationException("Invalid hackathon information");
         }
+        if (!checkNoRoleOverlap(organizerId, req)) {
+            throw new ValidationException(
+                    "Organizer, judge and mentors must be different users");
+        }
         User organizer = userRepository.findById(organizerId)
                 .orElseThrow(() -> new NotFoundException("Organizer not found: " + organizerId));
         User judge = userRepository.findById(req.getJudgeId())
@@ -92,6 +97,17 @@ public class HackathonService {
         List<User> mentors = userRepository.findAllById(req.getMentorIds());
         if (mentors.size() != req.getMentorIds().size()) {
             throw new ValidationException("Unknown or duplicated mentors: " + req.getMentorIds());
+        }
+
+        // the whole staff is checked before anything is built: assigning somebody already busy
+        // would create here a participation that addMentor and replaceJudge would refuse a
+        // moment later
+        List<User> assignedStaff = Stream.concat(Stream.of(organizer, judge), mentors.stream()).toList();
+        for (User staffMember : assignedStaff) {
+            if (!checkNoActiveParticipation(staffMember)) {
+                throw new ConflictException(
+                        "User already takes part in something else: " + staffMember.getUsername());
+            }
         }
 
         // the builder is prototype-scoped: a fresh instance per creation, since it keeps
@@ -134,6 +150,23 @@ public class HackathonService {
             return false;
         }
         return req.getJudgeId() != null && req.getMentorIds() != null && !req.getMentorIds().isEmpty();
+    }
+
+    /**
+     * The four roles of a hackathon are covered by four different people. The check works on the
+     * identifiers of the request because checkNoActiveParticipation cannot see this overlap: when
+     * it runs, none of the participations of this hackathon has been created yet, so the same
+     * user would pass it once for every role.
+     *
+     * Two mentors repeated are left out on purpose: they are already caught by the comparison
+     * between the mentors found and the identifiers asked for.
+     */
+    private boolean checkNoRoleOverlap(Long organizerId, CreateHackathonRequest req) {
+        if (organizerId.equals(req.getJudgeId())) {
+            return false;
+        }
+        List<Long> mentorIds = req.getMentorIds();
+        return !mentorIds.contains(organizerId) && !mentorIds.contains(req.getJudgeId());
     }
 
     /**

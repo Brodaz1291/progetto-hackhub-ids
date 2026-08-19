@@ -53,6 +53,10 @@ public class InvitationService {
                 .orElseThrow(() -> new NotFoundException("Team not found: " + teamId));
         // the membership belongs to TeamService: the sender is resolved through it
         TeamMember sender = teamService.getTeamMember(senderId);
+        if (!checkSenderBelongsToTeam(sender, team)) {
+            throw new ValidationException(
+                    "User " + senderId + " is not a member of team " + teamId);
+        }
 
         Invitation invitation = new Invitation(sender, team, invitedUser, InvitationState.PENDING);
         return invitationRepository.save(invitation);
@@ -126,6 +130,15 @@ public class InvitationService {
     private boolean checkNoActiveParticipation(User user) {
         List<Participation> activeParticipations = participationRepository.findActiveByUserId(user.getId());
         return activeParticipations.isEmpty();
+    }
+
+    /**
+     * An invitation is sent from inside the team it invites to. The membership of the sender and
+     * the team of the invitation travel as two separate parameters, so without this check knowing
+     * the id of a team would be enough to hand out memberships in a team one does not belong to.
+     */
+    private boolean checkSenderBelongsToTeam(TeamMember sender, Team team) {
+        return sender.getTeam().getId().equals(team.getId());
     }
 
     private void markAccepted(Invitation invitation) {

@@ -20,6 +20,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
     List<Registration> findByTeamId(Long teamId);
 
+    List<Registration> findByHackathonId(Long hackathonId);
+
     @Query("SELECT r FROM Hackathon h JOIN h.winner r WHERE h.id = :hackathonId")
     Optional<Registration> findWinnerByHackathonId(@Param("hackathonId") Long hackathonId);
 }

@@ -127,14 +127,19 @@ public class TeamService {
         team.getMembers().removeIf(member -> member.getId().equals(leavingMember.getId()));
 
         if (team.getMembers().isEmpty()) {
+            // a team without members cannot compete: the registrations still open are withdrawn
+            // whatever happens to the team. They belong to the hackathon rather than to the team,
+            // so no cascade reaches them and they go explicitly
+            List<Registration> openRegistrations = registrations.stream()
+                    .filter(registration -> registration.getHackathon().getState() == HackathonState.REGISTRATION)
+                    .toList();
+            registrationRepository.deleteAll(openRegistrations);
+
             if (checkHasConcludedParticipation(team)) {
                 // the team stays as a historical shell: a concluded hackathon must keep its
                 // winner, and the past submissions stay attached to the team that wrote them
                 teamRepository.save(team);
             } else {
-                // the registrations left are all still open, and they belong to the hackathon
-                // rather than to the team: no cascade reaches them, so they go explicitly
-                registrationRepository.deleteAll(registrations);
                 teamRepository.delete(team);
             }
         } else {

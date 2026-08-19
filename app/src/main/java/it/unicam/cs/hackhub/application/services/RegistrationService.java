@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class RegistrationService {
@@ -143,5 +144,17 @@ public class RegistrationService {
     private void applyDisqualification(Registration registration, String reason) {
         registration.setState(RegistrationState.DISQUALIFIED);
         registration.setDisqualificationReason(reason);
+    }
+
+    /**
+     * Returns the teams enrolled in a hackathon. It is the list the organizer reads before
+     * disqualifying a team and the mentor before reporting one: both operations work on a
+     * registration, and this is the only place where its identifier can be found.
+     *
+     * The disqualified registrations stay in the list, with their state: the exclusion of a team
+     * is part of what the organizer is looking at.
+     */
+    public List<Registration> getRegistrations(Long hackathonId) {
+        return registrationRepository.findByHackathonId(hackathonId);
     }
 }

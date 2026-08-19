@@ -7,12 +7,15 @@ import it.unicam.cs.hackhub.application.services.PaymentService;
 import it.unicam.cs.hackhub.application.services.RegistrationService;
 import it.unicam.cs.hackhub.model.entities.Payment;
 import it.unicam.cs.hackhub.model.entities.Registration;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/registrations")
@@ -34,6 +37,19 @@ public class RegistrationController {
     public RegistrationDTO registerTeam(@RequestParam Long hackathonId, @RequestParam Long teamId) {
         Registration registration = registrationService.registerTeam(hackathonId, teamId);
         return dtoMapper.toDTO(registration);
+    }
+
+    /**
+     * Lists the teams enrolled in a hackathon. The organizer and the mentor read it to choose
+     * which registration to disqualify or to report: both operations take a registration id,
+     * and this is where it comes from.
+     */
+    @GetMapping
+    public List<RegistrationDTO> getRegistrations(@RequestParam Long hackathonId) {
+        List<Registration> registrations = registrationService.getRegistrations(hackathonId);
+        return registrations.stream()
+                .map(dtoMapper::toDTO)
+                .toList();
     }
 
     /**
