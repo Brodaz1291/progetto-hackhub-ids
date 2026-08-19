@@ -3,7 +3,7 @@ package it.unicam.cs.hackhub.application.services;
 import it.unicam.cs.hackhub.application.exceptions.ConflictException;
 import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
-import it.unicam.cs.hackhub.designPatterns.PaymentProcessor;
+import it.unicam.cs.hackhub.designPatterns.adapter.PaymentProcessor;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Payment;
 import it.unicam.cs.hackhub.model.entities.Registration;

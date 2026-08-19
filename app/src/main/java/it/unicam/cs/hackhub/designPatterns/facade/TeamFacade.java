@@ -1,4 +1,4 @@
-package it.unicam.cs.hackhub.designPatterns;
+package it.unicam.cs.hackhub.designPatterns.facade;
 
 import it.unicam.cs.hackhub.application.services.InvitationService;
 import it.unicam.cs.hackhub.application.services.NotificationService;

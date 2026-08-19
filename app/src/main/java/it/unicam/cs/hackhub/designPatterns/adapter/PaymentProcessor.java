@@ -1,4 +1,4 @@
-package it.unicam.cs.hackhub.designPatterns;
+package it.unicam.cs.hackhub.designPatterns.adapter;
 
 import java.math.BigDecimal;
 

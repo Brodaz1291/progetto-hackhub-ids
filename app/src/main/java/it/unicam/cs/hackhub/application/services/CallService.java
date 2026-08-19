@@ -3,7 +3,7 @@ package it.unicam.cs.hackhub.application.services;
 import it.unicam.cs.hackhub.application.exceptions.ConflictException;
 import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
-import it.unicam.cs.hackhub.designPatterns.CallScheduler;
+import it.unicam.cs.hackhub.designPatterns.adapter.CallScheduler;
 import it.unicam.cs.hackhub.model.entities.Call;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
 import it.unicam.cs.hackhub.model.entities.Mentor;
