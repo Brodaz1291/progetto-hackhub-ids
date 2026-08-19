@@ -50,7 +50,7 @@ npx newman run postman/HackHub.postman_collection.json
 |---|---|
 | `00 Setup` | Logs in the preloaded users and stores their ids in `organizerId`, `judgeId`, `mentorId1`, `mentorId2`, `memberId1`, `memberId2` |
 | `01 Auth` | Registers a new user, then logs it in and out |
-| `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, then updates its information |
+| `02 Hackathon` | Creates a hackathon with the staff logged in at step `00`, refuses two creations that must not go through — one with a staff member already busy, one where a user covers two roles — then updates the hackathon created |
 | `03 Team` | Creates a team with `member1` as its first member |
 | `04 Staff` | Adds `member3` as a mentor and removes them, then makes them judge in place of `judge1` |
 | `05 Invitations` | `member1` invites `member2`, who reads the invitations received and accepts; a second invitation goes to `newcomer`, who refuses it |
@@ -61,7 +61,7 @@ npx newman run postman/HackHub.postman_collection.json
 | `10 Submissions` | Uploads the submission of each team, then reads them back from the list reserved to the staff and one by one |
 | `11 Support requests` | Sends a support request, plans the call that answers it, reads it back three ways, and closes with a call on a slot already booked |
 | `12 Reports` | A mentor reports a team to the organizer, who reads the reports back: the list and the detail of one |
-| `13 Disqualification` | Disqualifies the registration saved by `08`, between two refusals: one with no reason, one repeated |
+| `13 Disqualification` | Reads the teams enrolled in the hackathon, disqualifies the registration saved by `08` between two refusals — one with no reason, one repeated — and reads the list back with the sanction on it |
 | `14 Clock` | Moves the time past the end of the hackathon, which takes it from `RUNNING` to `EVALUATION` |
 | `15 Evaluation` | Reads the submissions left to evaluate, scores the one still in the running, then scores it again |
 | `16 Proclamation` | Proclaims `Null Pointers` the winner, which concludes the hackathon |
@@ -103,12 +103,12 @@ the folder asserts that shape once, because it is the same for every error.
 
 | Status | What it answers | Where the collection shows it |
 |---|---|---|
-| `400 Bad Request` | data that does not pass a check of the domain | a disqualification, a submission and a support request on a hackathon that is over |
+| `400 Bad Request` | data that does not pass a check of the domain | a disqualification, a submission and a support request on a hackathon that is over, and an invitation sent into a team the sender does not belong to |
 | `401 Unauthorized` | credentials that do not match | a login with the wrong password |
 | `404 Not Found` | a resource that does not exist | a hackathon and a submission asked for by an id nobody ever created |
 | `409 Conflict` | a request that collides with what has already happened | a prize paid twice and a username already in use |
 
-Three cases cannot live down there, because each of them needs a phase of the event that the
+Four cases cannot live down there, because each of them needs a phase of the event that the
 tail of the collection no longer has. They sit inside the folder that still has it:
 
 - **`502 Bad Gateway`**, closing `11 Support requests`: a call asking for a slot the calendar
@@ -118,6 +118,14 @@ tail of the collection no longer has. They sit inside the folder that still has 
   registration would already be out and the answer would be `409` instead.
 - **`409` on the same disqualification repeated**, closing the same folder, for the opposite
   reason.
+- **`409` on a hackathon whose staff is already busy**, in `02 Hackathon`: the check looks at
+  the participations that are still open, and at the end of the collection the event is
+  concluded, so the same request would go through.
+
+**`400` on a hackathon where one user covers two roles** keeps that one company, though it
+would be refused anywhere: the check compares the identifiers of the request, before any user
+is even read. It sits next to the creation it refuses, so the two ways of getting a staff wrong
+are read together.
 
 `500 Internal Server Error` is not covered: it answers an inconsistent state of the stored
 data, such as a hackathon whose organizer is missing, which no use case is able to produce.
