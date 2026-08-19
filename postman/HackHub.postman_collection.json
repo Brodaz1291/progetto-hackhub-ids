@@ -436,6 +436,106 @@
 					}
 				},
 				{
+					"name": "Create a hackathon with a staff member already busy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+									"pm.test(\"the message names who is busy\", () => pm.expect(pm.response.json().message).to.eql(\"User already takes part in something else: organizer1\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"HackHub Spring Challenge\",\n    \"rules\": \"A second event, refused before it is built.\",\n    \"location\": \"Camerino, Polo Informatico\",\n    \"prize\": 1000,\n    \"registrationDeadline\": \"2026-03-10T23:59:00\",\n    \"startDate\": \"2026-03-15T09:00:00\",\n    \"endDate\": \"2026-03-17T18:00:00\",\n    \"maxTeamSize\": 4,\n    \"judgeId\": {{memberId1}},\n    \"mentorIds\": [{{memberId2}}, {{newUserId}}]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons?organizerId={{organizerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons"
+							],
+							"query": [
+								{
+									"key": "organizerId",
+									"value": "{{organizerId}}"
+								}
+							]
+						},
+						"description": "The whole staff is checked before anything is built, and organizer1 is already the Organizer of the hackathon created above: a user takes part in one thing at a time. It runs here and not among the other refusals because the check looks at the participations that are still open, and once the event is concluded the same request would go through."
+					}
+				},
+				{
+					"name": "Create a hackathon where one user covers two roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Organizer, judge and mentors must be different users\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"HackHub Winter Challenge\",\n    \"rules\": \"A second event, refused before it is built.\",\n    \"location\": \"Camerino, Polo Informatico\",\n    \"prize\": 1000,\n    \"registrationDeadline\": \"2026-03-10T23:59:00\",\n    \"startDate\": \"2026-03-15T09:00:00\",\n    \"endDate\": \"2026-03-17T18:00:00\",\n    \"maxTeamSize\": 4,\n    \"judgeId\": {{memberId1}},\n    \"mentorIds\": [{{mentorId1}}, {{mentorId2}}]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons?organizerId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons"
+							],
+							"query": [
+								{
+									"key": "organizerId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "The four roles of a hackathon are covered by four different people, and here member1 is asked to be organizer and judge at once. The check works on the identifiers of the request because the one on the active participations cannot see this overlap: when it runs, none of the participations of this hackathon exists yet, so the same user would pass it once for every role."
+					}
+				},
+				{
 					"name": "Update hackathon",
 					"event": [
 						{
@@ -947,7 +1047,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"the identifier is hidden\", () => pm.expect(pm.response.json()[0].id).to.be.null);",
+									"pm.test(\"the identifier is there, so the visitor can select an event\", () => pm.expect(pm.response.json()[0].id).to.eql(Number(pm.collectionVariables.get(\"hackathonId\"))));",
 									"pm.test(\"the staff is hidden\", () => pm.expect(pm.response.json()[0].organizerUsername).to.be.null);"
 								]
 							}
@@ -967,7 +1067,7 @@
 								"public"
 							]
 						},
-						"description": "The same hackathons of the first request, converted for a visitor who is not authenticated: the identifier and the staff are left out, while the information about the event stays. The two requests differ in the conversion only."
+						"description": "The same hackathons of the first request, converted for a visitor who is not authenticated: the staff is left out, while the information about the event stays. The identifier stays too, because it is what the visitor selects a hackathon with before reading its detail, and it is not reserved information. The two requests differ in the conversion only."
 					}
 				},
 				{
@@ -1844,6 +1944,44 @@
 			"description": "It comes after everything that works on a participating team because the disqualification is terminal: once the team is out it can no longer submit anything nor be evaluated. The registrationId it uses is the one saved by 08 Registration and is still valid, because the disqualification marks the registration, it does not remove it.",
 			"item": [
 				{
+					"name": "Get the teams enrolled in the hackathon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"both teams are enrolled\", () => pm.expect(pm.response.json()).to.have.lengthOf(2));",
+									"pm.test(\"no team is disqualified yet\", () => pm.expect(pm.response.json().every(r => r.state === \"REGISTERED\")).to.be.true);",
+									"pm.test(\"the registration to disqualify is in the list\", () => pm.expect(pm.response.json().map(r => r.id)).to.include(Number(pm.collectionVariables.get(\"registrationId\"))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The Organizer reads the teams enrolled to choose which one to disqualify: the identifier of the registration comes from here, and it is the same list a Mentor reads before reporting a team. Each entry carries the name of the team and the state of its registration."
+					}
+				},
+				{
 					"name": "Disqualify a team with no reason",
 					"event": [
 						{
@@ -1954,6 +2092,49 @@
 							]
 						},
 						"description": "The team is out already, so the second disqualification collides with the state of the registration: 409 Conflict and not 400, because the request is well formed and it is the resource that is already where the request wants to take it. It proves that checkNotAlreadyDisqualified is there, and it changes nothing: the registration keeps the state and the reason recorded by the request above."
+					}
+				},
+				{
+					"name": "Get the teams enrolled after the disqualification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the disqualified team keeps its place in the list\", () => {",
+									"    const disqualified = pm.response.json().find(r => r.id === Number(pm.collectionVariables.get(\"registrationId\")));",
+									"    pm.expect(disqualified.state).to.eql(\"DISQUALIFIED\");",
+									"});",
+									"pm.test(\"the other team is untouched\", () => {",
+									"    const other = pm.response.json().find(r => r.id === Number(pm.collectionVariables.get(\"registrationId2\")));",
+									"    pm.expect(other.state).to.eql(\"REGISTERED\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/registrations?hackathonId={{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registrations"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								}
+							]
+						},
+						"description": "The disqualification marks the registration, it does not remove it: the team stays in the list with its new state, which is what tells the Organizer that the sanction has been applied. The submissions of that team disappear instead from the list the staff reads, because there they are excluded by projection."
 					}
 				}
 			]
@@ -2605,6 +2786,48 @@
 							]
 						},
 						"description": "The mentors answer while the event runs, and this one is over: 400 Bad Request. It is the same rule as the request above, read on a different endpoint."
+					}
+				},
+				{
+					"name": "Invite into a team you do not belong to",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the sender is a stranger to that team\", () => pm.expect(pm.response.json().message).to.include(\"is not a member of team\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/teams/{{teamId2}}/invitations?username=newcomer&senderId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"teams",
+								"{{teamId2}}",
+								"invitations"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "newcomer"
+								},
+								{
+									"key": "senderId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "An invitation is sent from inside the team it invites to. member1 belongs to the first team and tries to invite into the second: the membership of the sender and the team of the invitation travel as two separate parameters, so without this check knowing the id of a team would be enough to hand out memberships in a team one does not belong to."
 					}
 				}
 			]
