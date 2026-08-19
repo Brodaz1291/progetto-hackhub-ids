@@ -228,15 +228,7 @@ public class HackathonService {
         }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found: " + username));
-        // looking the mentor up inside the staff of this hackathon makes both the type and
-        // the membership checks implicit
-        Mentor mentor = hackathon.getStaff().stream()
-                .filter(Mentor.class::isInstance)
-                .map(Mentor.class::cast)
-                .filter(staffMentor -> staffMentor.getUser().getId().equals(user.getId()))
-                .findFirst()
-                .orElseThrow(() -> new ValidationException(
-                        username + " is not a mentor of hackathon " + hackathonId));
+        Mentor mentor = findMentor(hackathon, user);
         if (!checkNotLastMentor(hackathon)) {
             throw new ValidationException("The last mentor cannot be removed, only replaced");
         }
@@ -269,11 +261,7 @@ public class HackathonService {
         if (!checkNoActiveParticipation(user)) {
             throw new ConflictException("User already takes part in something else: " + username);
         }
-        Judge oldJudge = hackathon.getStaff().stream()
-                .filter(Judge.class::isInstance)
-                .map(Judge.class::cast)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Hackathon " + hackathonId + " has no judge"));
+        Judge oldJudge = findJudge(hackathon);
 
         // the notice goes out before the removal: afterwards the participation no longer exists
         notificationService.notifyJudge(oldJudge);
@@ -323,6 +311,35 @@ public class HackathonService {
                 .filter(Mentor.class::isInstance)
                 .count();
         return mentorCount > 1;
+    }
+
+    /**
+     * The mentor is looked for inside the staff of this hackathon: finding it there makes both
+     * the type and the membership checks implicit, so a mentor of another event cannot be
+     * removed from this one.
+     */
+    private Mentor findMentor(Hackathon hackathon, User user) {
+        return hackathon.getStaff().stream()
+                .filter(Mentor.class::isInstance)
+                .map(Mentor.class::cast)
+                .filter(staffMentor -> staffMentor.getUser().getId().equals(user.getId()))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException(
+                        user.getUsername() + " is not a mentor of hackathon " + hackathon.getId()));
+    }
+
+    /**
+     * A hackathon is judged by exactly one judge, so the search stops at the first one found.
+     * A hackathon without it is a state the model does not admit: hence the failure speaks of
+     * the platform, not of what the organizer asked for.
+     */
+    private Judge findJudge(Hackathon hackathon) {
+        return hackathon.getStaff().stream()
+                .filter(Judge.class::isInstance)
+                .map(Judge.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Hackathon " + hackathon.getId() + " has no judge"));
     }
 
     /**
