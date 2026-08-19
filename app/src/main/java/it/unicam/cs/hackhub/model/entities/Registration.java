@@ -38,7 +38,9 @@ public class Registration {
     @OneToOne(mappedBy = "registration", cascade = CascadeType.ALL, orphanRemoval = true)
     private Submission submission;
 
-    public Registration(LocalDateTime registrationDate, RegistrationState state) {
+    public Registration(Team team, Hackathon hackathon, LocalDateTime registrationDate, RegistrationState state) {
+        this.team = team;
+        this.hackathon = hackathon;
         this.registrationDate = registrationDate;
         this.state = state;
     }

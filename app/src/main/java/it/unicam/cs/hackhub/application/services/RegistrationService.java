@@ -60,9 +60,8 @@ public class RegistrationService {
             throw new ValidationException("Registration conditions not satisfied for hackathon " + hackathonId);
         }
 
-        Registration registration = new Registration(LocalDateTime.now(clock), RegistrationState.REGISTERED);
-        registration.setHackathon(hackathon);
-        registration.setTeam(team);
+        Registration registration = new Registration(team, hackathon,
+                LocalDateTime.now(clock), RegistrationState.REGISTERED);
         // the hackathon is managed inside the transaction, so the registration is added to its
         // list to keep the in-memory graph coherent for whoever reads it next
         hackathon.getRegistrations().add(registration);
