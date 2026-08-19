@@ -60,11 +60,7 @@ public class ReportService {
         Report report = new Report(registration, reason, LocalDateTime.now(clock));
         Report savedReport = reportRepository.save(report);
 
-        Organizer organizer = hackathon.getStaff().stream()
-                .filter(Organizer.class::isInstance)
-                .map(Organizer.class::cast)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Hackathon " + hackathon.getId() + " has no organizer"));
+        Organizer organizer = findOrganizer(hackathon);
         notificationService.notifyOrganizer(organizer);
 
         return savedReport;
@@ -80,6 +76,20 @@ public class ReportService {
 
     private boolean checkReason(String reason) {
         return StringUtils.hasText(reason);
+    }
+
+    /**
+     * A hackathon is run by exactly one organizer, so the search stops at the first one found.
+     * A hackathon without it is a state the model does not admit: hence the failure speaks of
+     * the platform, not of what the mentor asked for.
+     */
+    private Organizer findOrganizer(Hackathon hackathon) {
+        return hackathon.getStaff().stream()
+                .filter(Organizer.class::isInstance)
+                .map(Organizer.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Hackathon " + hackathon.getId() + " has no organizer"));
     }
 
     /**

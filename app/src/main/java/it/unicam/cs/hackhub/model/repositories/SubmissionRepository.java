@@ -9,9 +9,6 @@ import java.util.List;
 
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
-    @Query("SELECT s FROM Submission s WHERE s.registration.hackathon.id = :hackathonId")
-    List<Submission> findByHackathonId(@Param("hackathonId") Long hackathonId);
-
     @Query("""
             SELECT s FROM Submission s
             WHERE s.registration.hackathon.id = :hackathonId
