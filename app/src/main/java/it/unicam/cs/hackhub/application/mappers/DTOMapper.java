@@ -123,15 +123,16 @@ public class DTOMapper {
     }
 
     /**
-     * The public projection describes the event, not who runs it: the identifier and the
-     * staff are left out of the visitor's view.
+     * The public projection describes the event, not who runs it: the staff is left out of the
+     * visitor's view. The identifier stays, because it is what the visitor selects a hackathon
+     * with before reading its detail.
      */
     public HackathonDTO toPublicDTO(Hackathon hackathon) {
         String winnerTeamName = hackathon.getWinner() != null
                 ? hackathon.getWinner().getTeam().getName()
                 : null;
         return new HackathonDTO(
-                null,
+                hackathon.getId(),
                 hackathon.getName(),
                 hackathon.getLocation(),
                 hackathon.getPrize(),
