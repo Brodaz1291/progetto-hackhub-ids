@@ -1465,6 +1465,56 @@
 					}
 				},
 				{
+					"name": "Upload the submission again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it replaced the entry instead of creating a second one\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"submissionId\"))));",
+									"pm.test(\"the new data is the one that stays\", () => pm.expect(pm.response.json().title).to.eql(\"Byte Runners prototype, second version\"));",
+									"pm.test(\"the submission still belongs to Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId}}&title=Byte Runners prototype, second version&description=The same prototype after a last round of work, with the tests the first version was missing.&link=https://github.com/byte-runners/prototype",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "title",
+									"value": "Byte Runners prototype, second version"
+								},
+								{
+									"key": "description",
+									"value": "The same prototype after a last round of work, with the tests the first version was missing."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/byte-runners/prototype"
+								}
+							]
+						},
+						"description": "Uploading and updating are the same use case: a team hands in one entry, so a second upload replaces the data of the first instead of creating another submission. The identifier is what proves it, and it is why the request asserts on it: the submission keeps its identity, so whatever is attached to it, an evaluation above all, survives the update. It runs before the two readings, which would otherwise assert on the title of the first version."
+					}
+				},
+				{
 					"name": "List submissions",
 					"event": [
 						{
@@ -1518,7 +1568,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-									"pm.test(\"it is the submission uploaded before\", () => pm.expect(pm.response.json().title).to.eql(\"Byte Runners prototype\"));"
+									"pm.test(\"it is the submission uploaded before, with the data of the second upload\", () => pm.expect(pm.response.json().title).to.eql(\"Byte Runners prototype, second version\"));"
 								]
 							}
 						}
