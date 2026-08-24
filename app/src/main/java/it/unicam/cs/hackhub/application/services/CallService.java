@@ -1,6 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.ForbiddenException;
 import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.designPatterns.adapter.CallScheduler;
@@ -97,16 +98,20 @@ public class CallService {
                 .map(Mentor.class::cast)
                 .filter(mentor -> mentor.getUser().getId().equals(mentorId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new ForbiddenException(
                         "User " + mentorId + " is not a mentor of hackathon " + hackathon.getId()));
     }
 
     /**
      * A call supports a team while it works: before the event starts there is nothing to be
      * helped with, and once the submissions are closed the work is over.
+     *
+     * The phase alone is not enough: the running phase opens when the registrations close,
+     * which is days before the event begins, so the start date is checked as well.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
-        return hackathon.getState() == HackathonState.RUNNING;
+        return hackathon.getState() == HackathonState.RUNNING
+                && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
     private boolean checkSlot(LocalDateTime dateTime) {

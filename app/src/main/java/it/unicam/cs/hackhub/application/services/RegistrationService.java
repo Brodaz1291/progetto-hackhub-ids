@@ -83,9 +83,13 @@ public class RegistrationService {
         return registrationRepository.findActiveByTeam(team).isPresent();
     }
 
+    /**
+     * The deadline is not checked here any more: the registration phase now ends on it, and the
+     * phase has been brought up to date a few lines above, so a hackathon whose deadline has
+     * passed is no longer in REGISTRATION and the first condition already refuses it.
+     */
     private boolean checkRegistrationConditions(Team team, Hackathon hackathon) {
         return hackathon.getState() == HackathonState.REGISTRATION
-                && LocalDateTime.now(clock).isBefore(hackathon.getRegistrationDeadline())
                 && team.getMembers().size() <= hackathon.getMaxTeamSize();
     }
 

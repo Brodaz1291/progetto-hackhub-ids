@@ -1322,6 +1322,155 @@
 					}
 				},
 				{
+					"name": "Move clock past the deadline, before the start",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the clock is between the deadline and the start\", () => pm.expect(pm.response.text()).to.have.string(\"2026-02-13\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock?instant=2026-02-13T10:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							],
+							"query": [
+								{
+									"key": "instant",
+									"value": "2026-02-13T10:00:00"
+								}
+							]
+						},
+						"description": "The registrations closed on the twelfth at midnight and the event starts on the sixteenth: this is the window in between, where the teams that take part are settled and the work has not begun. The dates are the ones left by the update in 02 Hackathon, not the ones the hackathon was created with."
+					}
+				},
+				{
+					"name": "Get the hackathon with the registrations closed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the registration phase is over\", () => pm.expect(pm.response.json().state).to.eql(\"RUNNING\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							],
+							"query": []
+						},
+						"description": "The phase changes on the deadline, not on the start date: from here the hackathon is no longer open to registrations. The state says RUNNING because the platform has four phases and none of them is named after this window, which is why the operations of the event guard the start date on their own."
+					}
+				},
+				{
+					"name": "List open hackathons with the registrations closed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon is no longer offered to the teams\", () => pm.expect(pm.response.json().map(h => h.id)).to.not.include(Number(pm.collectionVariables.get(\"hackathonId\"))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/open",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"open"
+							],
+							"query": []
+						},
+						"description": "The list a team reads before enrolling holds the hackathons in the registration phase, and this one has left it: what the list offers and what the enrolment accepts now say the same thing."
+					}
+				},
+				{
+					"name": "Upload a submission before the hackathon starts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the event is not running\", () => pm.expect(pm.response.json().message).to.include(\"only while the hackathon is running\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId}}&title=Too early&description=Handed in before the event begins.&link=https://github.com/byte-runners/prototype",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "title",
+									"value": "Too early"
+								},
+								{
+									"key": "description",
+									"value": "Handed in before the event begins."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/byte-runners/prototype"
+								}
+							]
+						},
+						"description": "The phase is RUNNING but the event has not started, and the submission is refused: the check reads the start date as well as the phase. It is the request that shows why the window between the deadline and the start needs no state of its own."
+					}
+				},
+				{
 					"name": "Move clock to the start of the hackathon",
 					"event": [
 						{
@@ -2888,7 +3037,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"status 403\", () => pm.response.to.have.status(403));",
 									"pm.test(\"the message says the user is not staff of that hackathon\", () => pm.expect(pm.response.json().message).to.include(\"is not staff of hackathon\"));"
 								]
 							}
@@ -2917,7 +3066,7 @@
 								}
 							]
 						},
-						"description": "Reading the submissions is the only operation of the platform that depends on who is asking: it is granted to the staff of that hackathon, whatever the role. member1 belongs to a team that took part in the event but is not staff of it, so the reading is refused. It answers 400 and not 404, because the hackathon and the user both exist: what is missing is the role, and the platform has no status of its own for \"known but not allowed\"."
+						"description": "Reading the submissions is the only operation of the platform that depends on who is asking: it is granted to the staff of that hackathon, whatever the role. member1 belongs to a team that took part in the event but is not staff of it, so the reading is refused. It answers 403 and not 401: the caller is known, and what is missing is the role, not the identity."
 					}
 				}
 			]

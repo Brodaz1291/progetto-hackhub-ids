@@ -57,7 +57,7 @@ npx newman run postman/HackHub.postman_collection.json
 | `06 Consultation` | Reads the hackathons back: the whole list, the ones open to registrations, the public projection, the detail of one |
 | `07 Leave team` | `member2` leaves the team, which survives with `member1`, its creator, as the only member left |
 | `08 Registration` | Registers Byte Runners, then creates Null Pointers with `member2` and registers it too |
-| `09 Clock` | Reads the time the platform is living in and moves it to the day the hackathon starts |
+| `09 Clock` | Reads the time the platform is living in, moves it past the registration deadline — where the hackathon is already `RUNNING` but the event has not begun, so a submission is refused and the list of the open ones no longer offers it — and then to the day the hackathon starts |
 | `10 Submissions` | Uploads the submission of each team, then reads them back from the list reserved to the staff and one by one |
 | `11 Support requests` | Sends a support request, plans the call that answers it, reads it back three ways, and closes with a call on a slot already booked |
 | `12 Reports` | A mentor reports a team to the organizer, who reads the reports back: the list and the detail of one |
@@ -66,7 +66,7 @@ npx newman run postman/HackHub.postman_collection.json
 | `15 Evaluation` | Reads the submissions left to evaluate, scores the one still in the running, then scores it again |
 | `16 Proclamation` | Proclaims `Null Pointers` the winner, which concludes the hackathon |
 | `17 Prize payment` | Pays the prize of the concluded hackathon to the winning team |
-| `18 Error handling` | The requests that are meant to be refused: `400`, `401`, `404` and `409` |
+| `18 Error handling` | The requests that are meant to be refused: `400`, `401`, `403`, `404` and `409` |
 
 ## Why it is built this way
 
@@ -105,10 +105,11 @@ the folder asserts that shape once, because it is the same for every error.
 |---|---|---|
 | `400 Bad Request` | data that does not pass a check of the domain | a disqualification, a submission and a support request on a hackathon that is over, and an invitation sent into a team the sender does not belong to |
 | `401 Unauthorized` | credentials that do not match | a login with the wrong password |
+| `403 Forbidden` | a caller who is known but does not cover the role the operation requires | the submissions of a hackathon read by a user who is not staff of it |
 | `404 Not Found` | a resource that does not exist | a hackathon and a submission asked for by an id nobody ever created |
 | `409 Conflict` | a request that collides with what has already happened | a prize paid twice and a username already in use |
 
-Four cases cannot live down there, because each of them needs a phase of the event that the
+Five cases cannot live down there, because each of them needs a phase of the event that the
 tail of the collection no longer has. They sit inside the folder that still has it:
 
 - **`502 Bad Gateway`**, closing `11 Support requests`: a call asking for a slot the calendar
@@ -121,6 +122,10 @@ tail of the collection no longer has. They sit inside the folder that still has 
 - **`409` on a hackathon whose staff is already busy**, in `02 Hackathon`: the check looks at
   the participations that are still open, and at the end of the collection the event is
   concluded, so the same request would go through.
+- **`400` on a submission uploaded before the hackathon starts**, in `09 Clock`: it needs the
+  window between the registration deadline and the start date, which lasts three days of the
+  simulated calendar and is gone as soon as the clock moves on. It is the request that shows why
+  the phase alone does not decide: there the hackathon is already `RUNNING`.
 
 **`400` on a hackathon where one user covers two roles** keeps that one company, though it
 would be refused anywhere: the check compares the identifiers of the request, before any user

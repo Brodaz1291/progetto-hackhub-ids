@@ -9,8 +9,8 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
- * The phases a hackathon goes through on its own, without anyone commanding them: the start
- * of the event and the end of the submissions happen on their dates.
+ * The phases a hackathon goes through on its own, without anyone commanding them: the closing
+ * of the registrations and the end of the submissions happen on their dates.
  *
  * The rule lives here, and not inside HackathonService, because it belongs to whoever reads a
  * hackathon rather than to whoever manages one: the services that check the phase before
@@ -34,6 +34,12 @@ public class HackathonLifecycle {
      * The transitions are applied on reading, so a simple consultation can write: it is the
      * price of having no scheduler, and whoever calls this method has to expect it.
      *
+     * The registrations close on the deadline, and it is that date, not the start of the event,
+     * that ends the registration phase: from there the teams that take part are settled, so the
+     * hackathon is no longer open even though it has not begun yet. The days in between are
+     * part of the running phase, where the operations of the event are refused until the start
+     * date: whoever guards them checks the date as well as the phase.
+     *
      * The two transitions are applied one after the other, not as alternatives: if the clock
      * moves far enough ahead, a hackathon still open to registrations reaches the evaluation
      * in a single refresh. They only move forward, so a clock set back does not bring a
@@ -44,7 +50,7 @@ public class HackathonLifecycle {
         LocalDateTime now = LocalDateTime.now(clock);
         HackathonState previousState = hackathon.getState();
         if (hackathon.getState() == HackathonState.REGISTRATION
-                && !now.isBefore(hackathon.getStartDate())) {
+                && !now.isBefore(hackathon.getRegistrationDeadline())) {
             hackathon.setState(HackathonState.RUNNING);
         }
         if (hackathon.getState() == HackathonState.RUNNING

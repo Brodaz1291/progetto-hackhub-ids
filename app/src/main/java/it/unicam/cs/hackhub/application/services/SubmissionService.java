@@ -1,5 +1,6 @@
 package it.unicam.cs.hackhub.application.services;
 
+import it.unicam.cs.hackhub.application.exceptions.ForbiddenException;
 import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.model.entities.Hackathon;
@@ -79,9 +80,13 @@ public class SubmissionService {
     /**
      * Submissions belong to the event in progress: before it starts there is nothing to hand
      * in yet, once it is over the entries are frozen for the evaluation.
+     *
+     * The phase alone is not enough: the running phase opens when the registrations close,
+     * which is days before the event begins, so the start date is checked as well.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
-        return hackathon.getState() == HackathonState.RUNNING;
+        return hackathon.getState() == HackathonState.RUNNING
+                && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
     private boolean checkNotDisqualified(Registration registration) {
@@ -116,7 +121,7 @@ public class SubmissionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         if (!checkStaffAssigned(user, hackathon)) {
-            throw new ValidationException(
+            throw new ForbiddenException(
                     "User " + userId + " is not staff of hackathon " + hackathonId);
         }
         return submissionRepository.findByHackathonIdNotDisqualified(hackathonId);
