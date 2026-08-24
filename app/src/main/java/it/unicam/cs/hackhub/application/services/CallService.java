@@ -65,7 +65,7 @@ public class CallService {
         hackathonLifecycle.refreshState(hackathon);
         Mentor mentor = findMentor(hackathon, mentorId);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new ValidationException("A call can be scheduled only while the hackathon is running");
+            throw new ValidationException("A call can be scheduled only between the start and the end of the hackathon");
         }
         if (!checkSlot(dateTime)) {
             throw new ValidationException("The call must be planned on a future instant: " + dateTime);

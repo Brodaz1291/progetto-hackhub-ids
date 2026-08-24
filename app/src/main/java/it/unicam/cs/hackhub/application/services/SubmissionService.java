@@ -56,7 +56,7 @@ public class SubmissionService {
                 .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
-            throw new ValidationException("Submissions are accepted only while the hackathon is running");
+            throw new ValidationException("Submissions are accepted only between the start and the end of the hackathon");
         }
         if (!checkNotDisqualified(registration)) {
             throw new ValidationException("Registration " + registrationId + " is disqualified");

@@ -43,7 +43,7 @@ public class SupportRequestService {
                 .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
-            throw new ValidationException("Support is available only while the hackathon is running");
+            throw new ValidationException("Support is available only between the start and the end of the hackathon");
         }
         if (!checkDescription(description)) {
             throw new ValidationException("Description of the support request is required");

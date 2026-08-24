@@ -51,7 +51,7 @@ public class ReportService {
         Hackathon hackathon = registration.getHackathon();
         hackathonLifecycle.refreshState(hackathon);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new ValidationException("A team can be reported only while the hackathon is running");
+            throw new ValidationException("A team can be reported only between the start and the end of the hackathon");
         }
         if (!checkReason(reason)) {
             throw new ValidationException("Reason of the report is required");
