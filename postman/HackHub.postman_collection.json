@@ -2019,6 +2019,90 @@
 						},
 						"description": "The same slot, the same mentor and the same team as the call scheduled above: the calendar stub refuses it, CalendarAdapter turns the refusal into an ExternalServiceException and the platform answers 502 Bad Gateway. This is where the boundary with the external systems shows: the refusal comes from the calendar and not from the platform, and a 500 would have blamed the wrong side. It can only live here, while the hackathon is running: further down the collection the event is concluded and the check on the phase would refuse the call before the calendar is ever asked."
 					}
+				},
+				{
+					"name": "Schedule a call overlapping one already booked",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 502\", () => pm.response.to.have.status(502));",
+									"pm.test(\"the calendar says the slot is not free\", () => pm.expect(pm.response.json().message).to.include(\"has no slot free\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId2}}/call?mentorId={{mentorId1}}&dateTime=2026-02-16T15:15:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId2}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-16T15:15:00"
+								}
+							]
+						},
+						"description": "The call booked above starts at 15:00 and lasts half an hour, and this one would begin in the middle of it. The calendar compares intervals and not instants, so the same mentor cannot be in two places at once even when the two appointments do not begin together. The refusal comes from the external system, which is why it is a 502."
+					}
+				},
+				{
+					"name": "Schedule a call after the hackathon is over",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the slot falls outside the event\", () => pm.expect(pm.response.json().message).to.include(\"before the hackathon ends\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId2}}/call?mentorId={{mentorId1}}&dateTime=2026-02-19T10:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId2}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-19T10:00:00"
+								}
+							]
+						},
+						"description": "A call supports a team while it works, so its slot falls inside the event. This one is planned for the nineteenth, after the hackathon ends on the eighteenth: it would land on an event already in evaluation, where there is nothing left to be helped with. The platform refuses it on its own, without asking the calendar."
+					}
 				}
 			]
 		},
