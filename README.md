@@ -230,6 +230,15 @@ Authentication is not implemented: every endpoint is open, passwords are stored 
 and the H2 console answers without credentials. This is a university project about the domain
 of hackathons, not about authentication, and it is not ready to be used as it is.
 
+The identity of the caller is therefore an assumption about the context, not a fact the
+platform verifies: no operation checks that whoever calls it really is the organizer, the judge
+or the mentor it claims to be, and the logout accepts any identifier and answers `200`, because
+there is no session to close. The identifiers that do get verified are the ones the work needs —
+a user assigned to a hackathon, the recipient of an invitation — and they are read to be used,
+not to prove who is asking. The day an operation is meant to act on somebody else, that
+identifier becomes the selector of a resource and has to be validated as such: it would be a
+different use case, with an actor the model does not have.
+
 
 ## License
 
