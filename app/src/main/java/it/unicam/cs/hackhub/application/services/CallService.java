@@ -67,8 +67,9 @@ public class CallService {
         if (!checkHackathonIsRunning(hackathon)) {
             throw new ValidationException("A call can be scheduled only between the start and the end of the hackathon");
         }
-        if (!checkSlot(dateTime)) {
-            throw new ValidationException("The call must be planned on a future instant: " + dateTime);
+        if (!checkSlot(hackathon, dateTime)) {
+            throw new ValidationException(
+                    "The call must be planned on a future instant, before the hackathon ends: " + dateTime);
         }
         if (!checkRequestIsPending(supportRequest)) {
             throw new ConflictException(
@@ -114,8 +115,18 @@ public class CallService {
                 && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
-    private boolean checkSlot(LocalDateTime dateTime) {
-        return dateTime != null && dateTime.isAfter(LocalDateTime.now(clock));
+    /**
+     * A call is held while the team works, so its slot falls inside the event: an appointment
+     * planned after the end would land on a hackathon that has moved on to the evaluation, when
+     * the work is over and there is nothing left to be helped with.
+     *
+     * The start of the event is not checked here because it is already behind: the phase has
+     * been verified a few lines above, and a running hackathon has started.
+     */
+    private boolean checkSlot(Hackathon hackathon, LocalDateTime dateTime) {
+        return dateTime != null
+                && dateTime.isAfter(LocalDateTime.now(clock))
+                && dateTime.isBefore(hackathon.getEndDate());
     }
 
     /**
