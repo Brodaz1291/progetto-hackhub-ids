@@ -12,6 +12,8 @@ import it.unicam.cs.hackhub.model.repositories.SupportRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,13 +22,16 @@ public class SupportRequestService {
     private final SupportRequestRepository supportRequestRepository;
     private final RegistrationRepository registrationRepository;
     private final HackathonLifecycle hackathonLifecycle;
+    private final Clock clock;
 
     public SupportRequestService(SupportRequestRepository supportRequestRepository,
                                  RegistrationRepository registrationRepository,
-                                 HackathonLifecycle hackathonLifecycle) {
+                                 HackathonLifecycle hackathonLifecycle,
+                                 Clock clock) {
         this.supportRequestRepository = supportRequestRepository;
         this.registrationRepository = registrationRepository;
         this.hackathonLifecycle = hackathonLifecycle;
+        this.clock = clock;
     }
 
     /**
@@ -38,7 +43,7 @@ public class SupportRequestService {
                 .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
         hackathonLifecycle.refreshState(registration.getHackathon());
         if (!checkHackathonIsRunning(registration.getHackathon())) {
-            throw new ValidationException("Support is available only while the hackathon is running");
+            throw new ValidationException("Support is available only between the start and the end of the hackathon");
         }
         if (!checkDescription(description)) {
             throw new ValidationException("Description of the support request is required");
@@ -51,9 +56,13 @@ public class SupportRequestService {
     /**
      * Support belongs to the event in progress: before it starts there is nothing to ask help
      * about, once it is over the event is closed.
+     *
+     * The phase alone is not enough: the running phase opens when the registrations close,
+     * which is days before the event begins, so the start date is checked as well.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
-        return hackathon.getState() == HackathonState.RUNNING;
+        return hackathon.getState() == HackathonState.RUNNING
+                && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
     private boolean checkDescription(String description) {

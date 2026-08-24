@@ -264,7 +264,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the response does not expose the password\", () => pm.expect(pm.response.json()).to.not.have.property(\"password\"));",
 									"pm.collectionVariables.set(\"newUserId\", pm.response.json().id);"
 								]
@@ -392,7 +392,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the hackathon is open to registrations\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTRATION\"));",
 									"pm.collectionVariables.set(\"hackathonId\", pm.response.json().id);"
 								]
@@ -594,7 +594,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member1\"));",
 									"pm.collectionVariables.set(\"teamId\", pm.response.json().id);"
 								]
@@ -651,7 +651,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"member3 is the new mentor\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));"
 								]
 							}
@@ -771,7 +771,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
 									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
@@ -816,7 +816,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
 									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
@@ -1157,7 +1157,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the team registered is Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
 									"pm.test(\"the registration carries its id\", () => pm.expect(pm.response.json().id).to.not.be.null);",
@@ -1200,7 +1200,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member2\"));",
 									"pm.collectionVariables.set(\"teamId2\", pm.response.json().id);"
 								]
@@ -1251,7 +1251,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the team registered is Null Pointers\", () => pm.expect(pm.response.json().teamName).to.eql(\"Null Pointers\"));",
 									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
 									"pm.collectionVariables.set(\"registrationId2\", pm.response.json().id);"
@@ -1319,6 +1319,155 @@
 							]
 						},
 						"description": "The instant the platform is living in. Right after startup it is the one configured in app.time.fixed, but the value is not asserted: it depends on how many requests have already moved the time, so a run started midway would read something else."
+					}
+				},
+				{
+					"name": "Move clock past the deadline, before the start",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the clock is between the deadline and the start\", () => pm.expect(pm.response.text()).to.have.string(\"2026-02-13\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/dev/clock?instant=2026-02-13T10:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"dev",
+								"clock"
+							],
+							"query": [
+								{
+									"key": "instant",
+									"value": "2026-02-13T10:00:00"
+								}
+							]
+						},
+						"description": "The registrations closed on the twelfth at midnight and the event starts on the sixteenth: this is the window in between, where the teams that take part are settled and the work has not begun. The dates are the ones left by the update in 02 Hackathon, not the ones the hackathon was created with."
+					}
+				},
+				{
+					"name": "Get the hackathon with the registrations closed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the registration phase is over\", () => pm.expect(pm.response.json().state).to.eql(\"RUNNING\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/{{hackathonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"{{hackathonId}}"
+							],
+							"query": []
+						},
+						"description": "The phase changes on the deadline, not on the start date: from here the hackathon is no longer open to registrations. The state says RUNNING because the platform has four phases and none of them is named after this window, which is why the operations of the event guard the start date on their own."
+					}
+				},
+				{
+					"name": "List open hackathons with the registrations closed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the hackathon is no longer offered to the teams\", () => pm.expect(pm.response.json().map(h => h.id)).to.not.include(Number(pm.collectionVariables.get(\"hackathonId\"))));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hackathons/open",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hackathons",
+								"open"
+							],
+							"query": []
+						},
+						"description": "The list a team reads before enrolling holds the hackathons in the registration phase, and this one has left it: what the list offers and what the enrolment accepts now say the same thing."
+					}
+				},
+				{
+					"name": "Upload a submission before the hackathon starts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the event is not running\", () => pm.expect(pm.response.json().message).to.include(\"only between the start and the end of the hackathon\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?registrationId={{registrationId}}&title=Too early&description=Handed in before the event begins.&link=https://github.com/byte-runners/prototype",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "registrationId",
+									"value": "{{registrationId}}"
+								},
+								{
+									"key": "title",
+									"value": "Too early"
+								},
+								{
+									"key": "description",
+									"value": "Handed in before the event begins."
+								},
+								{
+									"key": "link",
+									"value": "https://github.com/byte-runners/prototype"
+								}
+							]
+						},
+						"description": "The phase is RUNNING but the event has not started, and the submission is refused: the check reads the start date as well as the phase. It is the request that shows why the window between the deadline and the start needs no state of its own."
 					}
 				},
 				{
@@ -1604,7 +1753,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the request comes from Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
 									"pm.collectionVariables.set(\"supportRequestId\", pm.response.json().id);"
@@ -1646,7 +1795,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"a mentor has taken the request over\", () => pm.expect(pm.response.json().status).to.eql(\"HANDLED\"));",
 									"pm.test(\"the request carries the slot just booked\", () => pm.expect(pm.response.json().callDateTime).to.be.a(\"string\").that.includes(\"2026-02-16T15:00\"));"
 								]
@@ -1796,7 +1945,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
 									"pm.collectionVariables.set(\"supportRequestId2\", pm.response.json().id);"
 								]
@@ -1870,6 +2019,90 @@
 						},
 						"description": "The same slot, the same mentor and the same team as the call scheduled above: the calendar stub refuses it, CalendarAdapter turns the refusal into an ExternalServiceException and the platform answers 502 Bad Gateway. This is where the boundary with the external systems shows: the refusal comes from the calendar and not from the platform, and a 500 would have blamed the wrong side. It can only live here, while the hackathon is running: further down the collection the event is concluded and the check on the phase would refuse the call before the calendar is ever asked."
 					}
+				},
+				{
+					"name": "Schedule a call overlapping one already booked",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 502\", () => pm.response.to.have.status(502));",
+									"pm.test(\"the calendar says the slot is not free\", () => pm.expect(pm.response.json().message).to.include(\"has no slot free\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId2}}/call?mentorId={{mentorId1}}&dateTime=2026-02-16T15:15:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId2}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-16T15:15:00"
+								}
+							]
+						},
+						"description": "The call booked above starts at 15:00 and lasts half an hour, and this one would begin in the middle of it. The calendar compares intervals and not instants, so the same mentor cannot be in two places at once even when the two appointments do not begin together. The refusal comes from the external system, which is why it is a 502."
+					}
+				},
+				{
+					"name": "Schedule a call after the hackathon is over",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the slot falls outside the event\", () => pm.expect(pm.response.json().message).to.include(\"before the hackathon ends\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/support-requests/{{supportRequestId2}}/call?mentorId={{mentorId1}}&dateTime=2026-02-19T10:00:00",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"support-requests",
+								"{{supportRequestId2}}",
+								"call"
+							],
+							"query": [
+								{
+									"key": "mentorId",
+									"value": "{{mentorId1}}"
+								},
+								{
+									"key": "dateTime",
+									"value": "2026-02-19T10:00:00"
+								}
+							]
+						},
+						"description": "A call supports a team while it works, so its slot falls inside the event. This one is planned for the nineteenth, after the hackathon ends on the eighteenth: it would land on an event already in evaluation, where there is nothing left to be helped with. The platform refuses it on its own, without asking the calendar."
+					}
 				}
 			]
 		},
@@ -1885,7 +2118,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the report is about Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"the reason is the one sent\", () => pm.expect(pm.response.json().reason).to.eql(\"The team used code written by someone outside the hackathon.\"));",
 									"pm.collectionVariables.set(\"reportId\", pm.response.json().id);"
@@ -2489,7 +2722,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the amount paid is the prize of the hackathon\", () => pm.expect(Number(pm.response.json().amount)).to.eql(6000));",
 									"pm.test(\"the payment is dated on the clock of the platform\", () => pm.expect(pm.response.json().date).to.include(\"2026-02-18T19:00\"));"
 								]
@@ -2759,7 +2992,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
-									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Submissions are accepted only while the hackathon is running\"));"
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Submissions are accepted only between the start and the end of the hackathon\"));"
 								]
 							}
 						}
@@ -2807,7 +3040,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
-									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Support is available only while the hackathon is running\"));"
+									"pm.test(\"the message says what went wrong\", () => pm.expect(pm.response.json().message).to.eql(\"Support is available only between the start and the end of the hackathon\"));"
 								]
 							}
 						}
@@ -2878,6 +3111,46 @@
 							]
 						},
 						"description": "An invitation is sent from inside the team it invites to. member1 belongs to the first team and tries to invite into the second: the membership of the sender and the team of the invitation travel as two separate parameters, so without this check knowing the id of a team would be enough to hand out memberships in a team one does not belong to."
+					}
+				},
+				{
+					"name": "List the submissions as a user who is not staff",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 403\", () => pm.response.to.have.status(403));",
+									"pm.test(\"the message says the user is not staff of that hackathon\", () => pm.expect(pm.response.json().message).to.include(\"is not staff of hackathon\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}&userId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "userId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "Reading the submissions is the only operation of the platform that depends on who is asking: it is granted to the staff of that hackathon, whatever the role. member1 belongs to a team that took part in the event but is not staff of it, so the reading is refused. It answers 403 and not 401: the caller is known, and what is missing is the role, not the identity."
 					}
 				}
 			]

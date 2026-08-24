@@ -55,10 +55,16 @@ typed by hand. See `postman/README.md` for how to import and run it.
 ## How time works
 
 A hackathon changes state on its own, following its dates: it is in `REGISTRATION` until the
-start date, `RUNNING` between the start and the end date, and `EVALUATION` afterwards. Only the
-last transition, to `CONCLUDED`, is commanded by somebody, when the organizer proclaims the
-winner. Several operations are accepted only in one of those states: a submission, a support
-request and a report all need the hackathon to be `RUNNING`.
+registration deadline, `RUNNING` between the deadline and the end date, and `EVALUATION`
+afterwards. Only the last transition, to `CONCLUDED`, is commanded by somebody, when the
+organizer proclaims the winner.
+
+The registration phase ends on the deadline and not on the start date, because that is the
+moment the teams taking part are settled. Between the deadline and the start date the hackathon
+is therefore already `RUNNING` while the event has not begun: the operations of the event — a
+submission, a support request, a call, a report — check the start date as well as the phase, and
+are refused until it arrives. The platform has four states and none of them is named after that
+window, which is a phase of preparation in which nothing can be done anyway.
 
 The platform does not read the clock of the machine. It reads a `Clock` bean configured in
 `app/src/main/resources/application.properties`:
@@ -77,9 +83,9 @@ PUT /api/dev/clock?instant=2026-02-16T10:00:00
 With `mode=system` the platform follows the real time instead, and the clock cannot be moved.
 
 This matters because a hackathon created with dates a couple of weeks away stays open to
-registrations until those dates arrive. Trying to upload a submission before moving the clock
+registrations until its deadline arrives. Trying to upload a submission before moving the clock
 past the start date gets refused, and the refusal is hard to read if one does not know that the
-phase is what is being checked.
+phase and the start date are what is being checked.
 
 The endpoints under `/api/dev/clock` are a development tool, not a use case: they exist only in
 the `dev` profile.
@@ -89,6 +95,15 @@ the `dev` profile.
 
 The identity of the caller travels as an explicit parameter (`organizerId`, `userId`,
 `creatorId`, ...) rather than being read from a session.
+
+**Response codes.** A `POST` that creates a resource answers `201 Created`; everything else that
+succeeds answers `200 OK`. The two exceptions are the upload of a submission and the evaluation
+of one, which answer `200` because the same request creates the entry the first time and
+replaces it afterwards. A failure carries `timestamp`, `status`, `error`, `message` and `path`,
+and the status says what kind of failure it is: `400` for data that does not pass a domain
+check, `401` for credentials that do not match, `403` for a caller who is known but does not
+cover the role the operation requires, `404` for a resource that does not exist, `409` for a
+request that collides with what has already happened, and `502` when an external system refuses.
 
 ### Authentication — `/api/auth`
 
@@ -214,6 +229,15 @@ The UML model of the project is in `docs/`.
 Authentication is not implemented: every endpoint is open, passwords are stored in clear text
 and the H2 console answers without credentials. This is a university project about the domain
 of hackathons, not about authentication, and it is not ready to be used as it is.
+
+The identity of the caller is therefore an assumption about the context, not a fact the
+platform verifies: no operation checks that whoever calls it really is the organizer, the judge
+or the mentor it claims to be, and the logout accepts any identifier and answers `200`, because
+there is no session to close. The identifiers that do get verified are the ones the work needs —
+a user assigned to a hackathon, the recipient of an invitation — and they are read to be used,
+not to prove who is asking. The day an operation is meant to act on somebody else, that
+identifier becomes the selector of a resource and has to be validated as such: it would be a
+different use case, with an actor the model does not have.
 
 
 ## License

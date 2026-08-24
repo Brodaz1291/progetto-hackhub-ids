@@ -7,11 +7,13 @@ import it.unicam.cs.hackhub.application.services.SupportRequestService;
 import it.unicam.cs.hackhub.model.entities.Call;
 import it.unicam.cs.hackhub.model.entities.SupportRequest;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ public class SupportRequestController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public SupportRequestDTO sendSupportRequest(@RequestParam Long registrationId,
                                                 @RequestParam String description) {
         SupportRequest supportRequest = supportRequestService.sendSupportRequest(registrationId, description);
@@ -69,6 +72,7 @@ public class SupportRequestController {
      * has left the pending state.
      */
     @PostMapping("/{supportRequestId}/call")
+    @ResponseStatus(HttpStatus.CREATED)
     public SupportRequestDTO scheduleCall(@PathVariable Long supportRequestId,
                                           @RequestParam Long mentorId,
                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

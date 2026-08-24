@@ -1,6 +1,7 @@
 package it.unicam.cs.hackhub.application.services;
 
 import it.unicam.cs.hackhub.application.exceptions.ConflictException;
+import it.unicam.cs.hackhub.application.exceptions.ForbiddenException;
 import it.unicam.cs.hackhub.application.exceptions.NotFoundException;
 import it.unicam.cs.hackhub.application.exceptions.ValidationException;
 import it.unicam.cs.hackhub.designPatterns.adapter.CallScheduler;
@@ -64,10 +65,11 @@ public class CallService {
         hackathonLifecycle.refreshState(hackathon);
         Mentor mentor = findMentor(hackathon, mentorId);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new ValidationException("A call can be scheduled only while the hackathon is running");
+            throw new ValidationException("A call can be scheduled only between the start and the end of the hackathon");
         }
-        if (!checkSlot(dateTime)) {
-            throw new ValidationException("The call must be planned on a future instant: " + dateTime);
+        if (!checkSlot(hackathon, dateTime)) {
+            throw new ValidationException(
+                    "The call must be planned on a future instant, before the hackathon ends: " + dateTime);
         }
         if (!checkRequestIsPending(supportRequest)) {
             throw new ConflictException(
@@ -97,20 +99,34 @@ public class CallService {
                 .map(Mentor.class::cast)
                 .filter(mentor -> mentor.getUser().getId().equals(mentorId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new ForbiddenException(
                         "User " + mentorId + " is not a mentor of hackathon " + hackathon.getId()));
     }
 
     /**
      * A call supports a team while it works: before the event starts there is nothing to be
      * helped with, and once the submissions are closed the work is over.
+     *
+     * The phase alone is not enough: the running phase opens when the registrations close,
+     * which is days before the event begins, so the start date is checked as well.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
-        return hackathon.getState() == HackathonState.RUNNING;
+        return hackathon.getState() == HackathonState.RUNNING
+                && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
-    private boolean checkSlot(LocalDateTime dateTime) {
-        return dateTime != null && dateTime.isAfter(LocalDateTime.now(clock));
+    /**
+     * A call is held while the team works, so its slot falls inside the event: an appointment
+     * planned after the end would land on a hackathon that has moved on to the evaluation, when
+     * the work is over and there is nothing left to be helped with.
+     *
+     * The start of the event is not checked here because it is already behind: the phase has
+     * been verified a few lines above, and a running hackathon has started.
+     */
+    private boolean checkSlot(Hackathon hackathon, LocalDateTime dateTime) {
+        return dateTime != null
+                && dateTime.isAfter(LocalDateTime.now(clock))
+                && dateTime.isBefore(hackathon.getEndDate());
     }
 
     /**

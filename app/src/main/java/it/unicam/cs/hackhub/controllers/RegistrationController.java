@@ -7,12 +7,14 @@ import it.unicam.cs.hackhub.application.services.PaymentService;
 import it.unicam.cs.hackhub.application.services.RegistrationService;
 import it.unicam.cs.hackhub.model.entities.Payment;
 import it.unicam.cs.hackhub.model.entities.Registration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -34,6 +36,7 @@ public class RegistrationController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public RegistrationDTO registerTeam(@RequestParam Long hackathonId, @RequestParam Long teamId) {
         Registration registration = registrationService.registerTeam(hackathonId, teamId);
         return dtoMapper.toDTO(registration);
@@ -71,6 +74,7 @@ public class RegistrationController {
      * client. The response leaves the identifier of the external transaction out.
      */
     @PostMapping("/prize")
+    @ResponseStatus(HttpStatus.CREATED)
     public PaymentDTO payPrize(@RequestParam Long hackathonId) {
         Payment payment = paymentService.payPrize(hackathonId);
         return dtoMapper.toDTO(payment);

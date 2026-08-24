@@ -51,7 +51,7 @@ public class ReportService {
         Hackathon hackathon = registration.getHackathon();
         hackathonLifecycle.refreshState(hackathon);
         if (!checkHackathonIsRunning(hackathon)) {
-            throw new ValidationException("A team can be reported only while the hackathon is running");
+            throw new ValidationException("A team can be reported only between the start and the end of the hackathon");
         }
         if (!checkReason(reason)) {
             throw new ValidationException("Reason of the report is required");
@@ -69,9 +69,13 @@ public class ReportService {
     /**
      * A report is about behaviour held during the event: before it starts there is nothing to
      * report yet, and once the submissions are closed the conduct of the teams is settled.
+     *
+     * The phase alone is not enough: the running phase opens when the registrations close,
+     * which is days before the event begins, so the start date is checked as well.
      */
     private boolean checkHackathonIsRunning(Hackathon hackathon) {
-        return hackathon.getState() == HackathonState.RUNNING;
+        return hackathon.getState() == HackathonState.RUNNING
+                && !LocalDateTime.now(clock).isBefore(hackathon.getStartDate());
     }
 
     private boolean checkReason(String reason) {
