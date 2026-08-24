@@ -9,6 +9,7 @@ import it.unicam.cs.hackhub.controllers.requests.CreateTeamRequest;
 import it.unicam.cs.hackhub.designPatterns.facade.TeamFacade;
 import it.unicam.cs.hackhub.model.entities.Invitation;
 import it.unicam.cs.hackhub.model.entities.Team;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -47,6 +49,7 @@ public class TeamController {
      * prescribes, instead of being read from the security context.
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public TeamDTO createTeam(@RequestBody CreateTeamRequest req,
                               @RequestParam Long creatorId) {
         Team createdTeam = teamService.createTeam(req, creatorId);
@@ -63,6 +66,7 @@ public class TeamController {
     }
 
     @PostMapping("/{teamId}/invitations")
+    @ResponseStatus(HttpStatus.CREATED)
     public InvitationDTO sendInvitation(@PathVariable Long teamId,
                                         @RequestParam String username,
                                         @RequestParam Long senderId) {

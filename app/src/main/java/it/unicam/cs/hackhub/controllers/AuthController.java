@@ -5,10 +5,12 @@ import it.unicam.cs.hackhub.application.mappers.DTOMapper;
 import it.unicam.cs.hackhub.application.services.AuthService;
 import it.unicam.cs.hackhub.controllers.requests.RegisterRequest;
 import it.unicam.cs.hackhub.model.entities.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,6 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
     public UserDTO register(@RequestBody RegisterRequest req) {
         User registeredUser = authService.register(req);
         return dtoMapper.toDTO(registeredUser);

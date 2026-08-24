@@ -264,7 +264,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the response does not expose the password\", () => pm.expect(pm.response.json()).to.not.have.property(\"password\"));",
 									"pm.collectionVariables.set(\"newUserId\", pm.response.json().id);"
 								]
@@ -392,7 +392,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the hackathon is open to registrations\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTRATION\"));",
 									"pm.collectionVariables.set(\"hackathonId\", pm.response.json().id);"
 								]
@@ -594,7 +594,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member1\"));",
 									"pm.collectionVariables.set(\"teamId\", pm.response.json().id);"
 								]
@@ -651,7 +651,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"member3 is the new mentor\", () => pm.expect(pm.response.json().username).to.eql(\"member3\"));"
 								]
 							}
@@ -771,7 +771,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
 									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
@@ -816,7 +816,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the invitation is for the team of member1\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"member1 is the sender\", () => pm.expect(pm.response.json().senderUsername).to.eql(\"member1\"));",
 									"pm.test(\"the invitation is pending\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
@@ -1157,7 +1157,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the team registered is Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
 									"pm.test(\"the registration carries its id\", () => pm.expect(pm.response.json().id).to.not.be.null);",
@@ -1200,7 +1200,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the creator is the first member\", () => pm.expect(pm.response.json().memberUsernames).to.include(\"member2\"));",
 									"pm.collectionVariables.set(\"teamId2\", pm.response.json().id);"
 								]
@@ -1251,7 +1251,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the team registered is Null Pointers\", () => pm.expect(pm.response.json().teamName).to.eql(\"Null Pointers\"));",
 									"pm.test(\"the registration starts as REGISTERED\", () => pm.expect(pm.response.json().state).to.eql(\"REGISTERED\"));",
 									"pm.collectionVariables.set(\"registrationId2\", pm.response.json().id);"
@@ -1604,7 +1604,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the request comes from Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
 									"pm.collectionVariables.set(\"supportRequestId\", pm.response.json().id);"
@@ -1646,7 +1646,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"a mentor has taken the request over\", () => pm.expect(pm.response.json().status).to.eql(\"HANDLED\"));",
 									"pm.test(\"the request carries the slot just booked\", () => pm.expect(pm.response.json().callDateTime).to.be.a(\"string\").that.includes(\"2026-02-16T15:00\"));"
 								]
@@ -1796,7 +1796,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"no mentor has taken it over yet\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
 									"pm.collectionVariables.set(\"supportRequestId2\", pm.response.json().id);"
 								]
@@ -1885,7 +1885,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the report is about Byte Runners\", () => pm.expect(pm.response.json().teamName).to.eql(\"Byte Runners\"));",
 									"pm.test(\"the reason is the one sent\", () => pm.expect(pm.response.json().reason).to.eql(\"The team used code written by someone outside the hackathon.\"));",
 									"pm.collectionVariables.set(\"reportId\", pm.response.json().id);"
@@ -2489,7 +2489,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"status 201 Created\", () => pm.response.to.have.status(201));",
 									"pm.test(\"the amount paid is the prize of the hackathon\", () => pm.expect(Number(pm.response.json().amount)).to.eql(6000));",
 									"pm.test(\"the payment is dated on the clock of the platform\", () => pm.expect(pm.response.json().date).to.include(\"2026-02-18T19:00\"));"
 								]
@@ -2878,6 +2878,46 @@
 							]
 						},
 						"description": "An invitation is sent from inside the team it invites to. member1 belongs to the first team and tries to invite into the second: the membership of the sender and the team of the invitation travel as two separate parameters, so without this check knowing the id of a team would be enough to hand out memberships in a team one does not belong to."
+					}
+				},
+				{
+					"name": "List the submissions as a user who is not staff",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"the message says the user is not staff of that hackathon\", () => pm.expect(pm.response.json().message).to.include(\"is not staff of hackathon\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/submissions?hackathonId={{hackathonId}}&userId={{memberId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"submissions"
+							],
+							"query": [
+								{
+									"key": "hackathonId",
+									"value": "{{hackathonId}}"
+								},
+								{
+									"key": "userId",
+									"value": "{{memberId1}}"
+								}
+							]
+						},
+						"description": "Reading the submissions is the only operation of the platform that depends on who is asking: it is granted to the staff of that hackathon, whatever the role. member1 belongs to a team that took part in the event but is not staff of it, so the reading is refused. It answers 400 and not 404, because the hackathon and the user both exist: what is missing is the role, and the platform has no status of its own for \"known but not allowed\"."
 					}
 				}
 			]
